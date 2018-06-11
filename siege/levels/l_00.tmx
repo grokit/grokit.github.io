@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" renderorder="right-down" width="300" height="14" tilewidth="64" tileheight="64" nextobjectid="1">
- <tileset firstgid="1" name="main_gfx" tilewidth="954" tileheight="815" tilecount="16">
+ <tileset firstgid="1" name="main_gfx" tilewidth="954" tileheight="815" tilecount="17">
   <tile id="0">
    <image width="64" height="64" source="../gfx/water.png"/>
   </tile>
@@ -48,6 +48,9 @@
   </tile>
   <tile id="15">
    <image width="954" height="815" source="../gfx/background_end.png"/>
+  </tile>
+  <tile id="16">
+   <image width="64" height="64" source="../gfx/doggy.png"/>
   </tile>
  </tileset>
  <layer name="layer0" width="300" height="14">
@@ -7298,7 +7301,7 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="3"/>
-   <tile gid="0"/>
+   <tile gid="9"/>
    <tile gid="9"/>
    <tile gid="1"/>
    <tile gid="1"/>
@@ -7597,7 +7600,7 @@
    <tile gid="0"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="0"/>
+   <tile gid="9"/>
    <tile gid="0"/>
    <tile gid="9"/>
    <tile gid="12"/>
@@ -7897,8 +7900,8 @@
    <tile gid="9"/>
    <tile gid="0"/>
    <tile gid="0"/>
-   <tile gid="0"/>
-   <tile gid="0"/>
+   <tile gid="9"/>
+   <tile gid="17"/>
    <tile gid="9"/>
    <tile gid="12"/>
    <tile gid="12"/>

@@ -16,51 +16,12 @@ var app = new PIXI.Application(screenWidth, screenHeight, {
 
 document.body.appendChild(app.view);
 
-// Fullscreen-ish
-if (false) {
-    if (false) {
-        app.renderer.view.style.position = "absolute";
-        app.renderer.view.style.display = "block";
-        app.renderer.autoResize = true;
-        app.renderer.resize(window.innerWidth, window.innerHeight);
-    }
-    if (false) {
-        // Does not work.
-        var elem = document.getElementById("gamespace");
-        requestFullScreen(elem);
-
-        function requestFullScreen(elt) {
-            if (elt.requestFullscreen) {
-                elt.requestFullscreen();
-            } else if (elt.msRequestFullscreen) {
-                elt.msRequestFullscreen();
-            } else if (elt.mozRequestFullScreen) {
-                elt.mozRequestFullScreen();
-            } else if (elt.webkitRequestFullscreen) {
-                elt.webkitRequestFullscreen();
-            } else {
-                throw "No fullscreen.";
-            }
-        }
-    }
-}
-
 // Pre-load all resources
 // https://github.com/englercj/resource-loader
 PIXI.loader
     .add(AssetsList.list())
     .on("progress", onGfxLoadProgress)
     .load(onGfxLoaded);
-
-if (false) {
-    PIXI.sound.Sound.from({
-        url: 'sounds/music.mp3',
-        autoPlay: true,
-        complete: function() {
-            console.log('Loading music done.');
-        }
-    });
-}
 
 function onGfxLoadProgress(loader, resource) {
     if (false) {
@@ -115,7 +76,6 @@ function onGfxLoaded() {
     loadLevel(world, stage);
 
     let engine = new Engine();
-    engine.setScreenSize
     engine.setWorld(world);
 
     // Setup input (keyboard) to engine events.

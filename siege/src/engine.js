@@ -34,30 +34,8 @@ class Engine {
 
     // We rely on this running at 60 FPS.
     onTime(timeInsecond) {
-        let artificialSlowDown = false;
-        if (artificialSlowDown) {
-            for (let i = 0; i < 1e7; ++i) {
-                let j = i * i;
-            }
-        }
-
         let ds = timeInsecond - this._time;
         this._time = timeInsecond;
-
-        if (false) {
-            let fps = 1.0 / ds;
-            this._fpsData.push(fps);
-            if (this._fpsData.length > 5 * 60) {
-                //if (Math.floor(Math.random() * 100) <= 1) {
-                let t = 0;
-                for (let i = 0; i < this._fpsData.length; ++i) {
-                    t += this._fpsData[i];
-                }
-                t /= this._fpsData.length;
-                console.log("inner fps: " + fps);
-                this._fpsData = new Array();
-            }
-        }
 
         for (let ele of this._world.objectsIterator()) {
             // Remove objects out of ttl.
@@ -207,7 +185,7 @@ class Engine {
             }
         }
 
-        // factory.end == hack hack hack ::::
+        // factory.end <== :::
         if (nHero == 0 && isNaN(this._end) && isNaN(this._factory.end)) {
             this._end = true;
             let text = this._factory.buildFromName('text', {

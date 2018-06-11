@@ -138,7 +138,7 @@ class Collisions {
                 newObjects.add(ball);
             }
 
-            // hack hack hack
+            // ::: remove
             factory.end = true;
         }
 

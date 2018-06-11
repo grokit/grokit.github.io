@@ -137,6 +137,9 @@ class Collisions {
                 ball.y = screenHeight / 2;
                 newObjects.add(ball);
             }
+
+            // hack hack hack
+            factory.end = true;
         }
 
     } // endof: collide function

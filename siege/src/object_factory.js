@@ -141,6 +141,7 @@ class ObjectFactory {
         this._nameToCT.set("gfx/water_full.png", function(name, o, params) {
             TraitsLibrary._displayable(o, name);
             o.traits.add('swimmable');
+            o.zIndex = -100;
             return o;
         });
 

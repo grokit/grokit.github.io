@@ -207,7 +207,8 @@ class Engine {
             }
         }
 
-        if (nHero == 0 && isNaN(this._end)) {
+        // factory.end == hack hack hack ::::
+        if (nHero == 0 && isNaN(this._end) && isNaN(this._factory.end)) {
             this._end = true;
             let text = this._factory.buildFromName('text', {
                 text: "You Misstepped!\n\nRefresh browser to try again.",

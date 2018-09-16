@@ -1,0 +1,10 @@
+
+# vi
+*~
+*.swp
+*.swo
+/src/tabs
+
+# ctags
+/src/tags
+

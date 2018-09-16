@@ -1,38 +1,4 @@
-/**
-# TODOs
 
-## As
-
-- fix collision bugs
-
-## Bs
-
-- Be able to have checkpoints.
-
-- cannon just absorb first element that collides with them, then fire it.
-
-- Be able to jump on moveable surface. Then get the speed of that surface.
-    - Should work for X and Y.
-    - Means ttl / timeLimitedProperties have to be able to also set objects (traits.set('on_surface'), objB).
-
-- fix bug where long vertical wall -- hit top edge then can re-jump
-
-## Cs
-
-- refactor so that essentially there is no hard-code in main loop.
-
-- Jump proportional to how long pressed.
-
-- Have pushable crates.
-    - If push a crate from underneath, crate from above fall on.
-
-- Should accumulate in hero if MANY things collide at same time, so that if really stuck then dies.
-
-- Allow 2nd jump which allows to change direction more drastically.
-
-- Bomb displacement (moves all items around it -- all items able to get moved & fall into place in a way that feels good).
-
-*/
 class Engine {
     constructor(world, screenWidth, screenHeight) {
         this._world = world;

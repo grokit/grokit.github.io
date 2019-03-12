@@ -22,8 +22,8 @@ class ObjectFactory {
         // ... done:
         // host.remove = True;
 
-        o.x = 0;
-        o.y = 0;
+        o.x = -1;
+        o.y = -1;
 
         // Overload what happens here if there is record-keeping to do
         // every frame.
@@ -37,6 +37,11 @@ class ObjectFactory {
         o.traits.add('displayable');
     }
 
+    static _background(o, name) {
+        o.traits.add('background');
+        o.zIndex = -50;
+    }
+
     static _velocity(o) {
         o.traits.add('velocity');
         o.vx = 0;
@@ -47,8 +52,18 @@ class ObjectFactory {
         o.traits.add('surface');
     }
 
-    static _collides_on_surface(o) {
-        o.traits.add('collides_on_surface');
+    static _stands_on_surface(o) {
+        o.traits.add('stands_on_surface');
+    }
+
+    static _pushable(o) {
+        o.traits.add('pushable');
+        ObjectFactory._velocity(o);
+    }
+
+    static _draggable(o) {
+        o.traits.add('draggable');
+        ObjectFactory._velocity(o);
     }
 
     static _gravity(o) {
@@ -70,13 +85,30 @@ class ObjectFactory {
         o.traits.add('input');
         o.key = ascii;
         o.type = type;
+        o.unixtimeMs = (new Date()).getTime();
         return o;
     }
 
     static _unknown(name) {
         let o = ObjectFactory._createDefaultObject();
+        o.name = name;
         ObjectFactory._displayable(o, name);
+        ObjectFactory._background(o, name);
         return o;
+    }
+
+    static isStompableObjectBelow(obj, world) {
+        let lookBelow = 600;
+        let widen = 50;
+        let below = world.select(obj.x - widen, obj.y - 1 - lookBelow, obj.width + widen / 2, lookBelow);
+
+        for (let nearbyObj of below) {
+            if (!nearbyObj.traits.has('surface') && !nearbyObj.traits.has('decoration')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     constructor(world) {
@@ -97,18 +129,457 @@ class ObjectFactory {
             return o;
         });
 
-        this._nameToCT.set('gfx/block_fall_on_touch.png', function(name, o, params) {
+        this._nameToCT.set('gfx/explosion_big.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            o.traits.add('decoration');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/gorilla_projectile.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            o.traits.add('immune_to_lethal');
+            o.traits.add('lethal');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/bush_stackable.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            o.traits.add('decoration');
+            o.zIndex = -50;
+            return o;
+        });
+
+        this._nameToCT.set('gfx/bush_branch.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             ObjectFactory._surface(o);
-            ObjectFactory._collides_on_surface(o);
+            o.traits.add('surface_top_only');
+            o.height *= 0.6;
+            o.zIndex = -50;
+            return o;
+        });
+
+        this._nameToCT.set('gfx/explosion_small.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            o.traits.add('decoration');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/magic_potion.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            o.traits.add('transform_to_gorilla');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/pants_gorilla.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._stands_on_surface(o);
+            ObjectFactory._gravity(o);
+
+            o.traits.add('hero');
+            o.traits.add('tracked_by_camera');
+            o.traits.add('hero_strong_mode');
+            o.traits.add('immune_to_lethal');
+            o.zIndex = 50;
+            o.cooldown = 10;
+            o.tick = function(){
+                o.cooldown = Math.min(10, o.cooldown +1);
+            }
+
+            // l -> key
+            o.traits.add('controllable');
+            o.input = function(l) {
+                let obj = o;
+
+                let vxMax = 12;
+                let bomb = false;
+                if (l.key == 88 && l.type == 'up') {
+                    bomb = true;
+                }
+
+                if ((l.key == 88 || l.key == 90) && l.type == 'up') {
+                    if(o.cooldown >= 10){
+                        let projectile = params.world.getFactory().buildFromName("gfx/gorilla_projectile.png");
+                        if(bomb){
+                          projectile = params.world.getFactory().buildFromName("gfx/bomb.png");
+                        }
+                        projectile.x = o.x + o.width + 1;
+                        projectile.y = o.y + o.height - projectile.height;
+                        projectile.phase = 100;
+
+                        if(o.image.search("_l.png") == -1){
+                            projectile.vx = 40;
+                        } else {
+                            projectile.x = o.x - projectile.width - 1;
+                            projectile.vx = -40;
+                        }
+
+                        projectile.vy = 20;
+                        params.world.addObject(projectile);
+                        projectile.traits.set('kill', 2000);
+
+                        o.cooldown -= 10;
+                    }
+                } else if (l.key == 37 && l.type == 'up') {
+                    // left
+                    if (obj.vx - vxMax / 10 > -vxMax) {
+                        obj.vx -= vxMax / 10;
+                    }
+
+                    let img_l = "gfx/pants_gorilla_l.png";
+                    obj.image = img_l;
+                    obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
+                } else if (l.key == 39 && l.type == 'up') {
+                    // right 
+                    if (obj.vx + vxMax / 10 < vxMax) {
+                        obj.vx += vxMax / 10;
+                    }
+
+                    let img_l = "gfx/pants_gorilla.png";
+                    obj.image = img_l;
+                    obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
+
+                } else if (l.key == 38) {
+                    if (l.type == 'up') {
+                        obj.traits.set('press_jump', 5);
+
+                        // Prevent long-up press to re-jump after
+                        // object has landed; requires another press
+                        // from user.
+                        let skip = false;
+                        let nowMs = (new Date()).getTime();
+                        if (nowMs - l.unixtimeMs > 100) {
+                            skip = true;
+                        }
+
+                        if (!skip && obj.traits.has('on_surface') && !obj.traits.has('jumping')) {
+
+                            obj.vy = 10;
+
+                            obj.traits.set('on_surface', 0);
+                            obj.traits.set('jumping', 15);
+
+                            if (obj.traits.has('jump_boost')) {
+                                obj.vy += 20;
+                            }
+
+                            Audio.play('sfx/sfx_jumpland.ogg', 0.5, false);
+                        }
+
+                    } else if (l.type == 'down') {
+                        obj.traits.remove('jumping');
+                    } else {
+                        throw "unknown input";
+                    }
+                }
+            }
+
+            return o;
+        });
+
+        // Little green stuff.
+        this._nameToCT.set('gfx/jumpee.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            o.traits.add('walks');
+
+            // 0: looking for target
+            o.phase = 0;
+            o.walkDirection = -1; // -1 = left.
+
+            o.hitObstacle = function() {
+                o.walkDirection *= -1;
+            }
+
+            o.tick = function() {
+                if (o.phase == 0) {
+                    if (o.traits.has('on_surface')) {
+                        let widen = 400;
+                        let objSides = world.select(o.x - widen, o.y, o.width + widen, o.height * 3);
+                        for (let sObj of objSides) {
+                            if (sObj.traits.has('hero')) {
+                                let dir = 1;
+                                if (sObj.x > o.x) {
+                                    dir = -1;
+                                }
+
+                                o.walkDirection = dir;
+                                o.phase = 150;
+
+                                if (Math.random() > 0.7) {
+                                    // Jump away.
+                                    if (Math.random() > 0.8) {
+                                        dir *= -1;
+                                    }
+
+                                    o.vx = dir * 30 * (0.5 + Math.random());
+                                    o.vy = 24 * (0.5 + Math.random());
+                                }
+                            }
+                        }
+                    }
+                    o.phase = 10;
+                } else {
+                    if (o.phase > 0) {
+                        o.phase -= 1;
+                    }
+                    o.vx += 0.2 * o.walkDirection;
+                }
+            }
+
+            return o;
+        });
+
+        this._nameToCT.set('gfx/block_fall_on_touch.png', function(name, o, params) {
+
+
+            // :::
+            let maxTolerance = 15;
+            let tolerance = maxTolerance;
+            o.touched = function() {
+
+                tolerance -= 1;
+
+                if (tolerance == Math.floor(maxTolerance * 0.8)) {
+                    o.image = "gfx/block_fall_on_touch_damaged.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                }
+
+                if (tolerance == Math.floor(maxTolerance * 0.2)) {
+                    o.image = "gfx/block_fall_on_touch_damaged_02.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                }
+
+                if (tolerance == 0) {
+                    ObjectFactory._velocity(o);
+                    ObjectFactory._gravity(o);
+                    o.vy = 0;
+                }
+            }
+
+            let subLevel = 0;
+            o.tick = function() {
+                if (tolerance > 0 && tolerance < maxTolerance) {
+                    subLevel += 0.1;
+
+                    if (subLevel >= 1) {
+                        subLevel = 0;
+                        tolerance = Math.min(maxTolerance, tolerance + 1);
+
+                        if (tolerance == maxTolerance) {
+                            o.image = "gfx/block_fall_on_touch.png";
+                            o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                        }
+
+                        if (tolerance == Math.floor(maxTolerance * 0.2) + 1) {
+                            o.image = "gfx/block_fall_on_touch_damaged.png";
+                            o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                        }
+                    }
+                }
+            }
+
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._surface(o);
+            ObjectFactory._stands_on_surface(o);
             o.traits.add('fall_on_touch');
+            o.traits.add('destroy_to_smoke');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/block_pushable.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._surface(o);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            ObjectFactory._pushable(o);
+            o.traits.add('destroy_to_smoke');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/fountain.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._surface(o);
+            ObjectFactory._stands_on_surface(o);
+
+            o.phase = 0;
+            o.tick = function() {
+                o.phase += 1;
+
+                if (o.phase % 1 == 0) {
+                    for (let i = 0; i < 1; ++i) {
+                        let smoke = params.world.getFactory().buildFromName("gfx/smoke_dust.png");
+                        smoke.x = o.x + o.width * 0.5 + (Math.random() - 0.5) * o.width;
+                        smoke.y = o.y + o.height;
+                        smoke.vx = (0.5 - Math.random()) * 10;
+                        smoke.vy = 2 + (0.25 - Math.random()) * 3;
+                        params.world.addObject(smoke);
+                        smoke.traits.set('kill', 1000);
+                    }
+                }
+            }
+
+
+            return o;
+        });
+
+        this._nameToCT.set('gfx/spring_jump_up.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._surface(o);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            o.traits.add('walked_on_action');
+
+            o.phase = -1;
+
+            o.onWalkedOn = function(crr) {
+                o.image = "gfx/spring_jump_up_extended.png";
+                o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                o.height = o.sprite.texture.height;
+                o.width = o.sprite.texture.width;
+
+                crr.y = o.y + o.height;
+
+                crr.vy += 15;
+                crr.vy += 20;
+                o.phase = 25;
+
+                Audio.play('sfx/object_generic_squished.ogg', 0.5, false);
+            }
+
+            o.tick = function() {
+                if (o.phase >= 0) {
+                    o.phase -= 1;
+                }
+
+                if (o.phase == 0) {
+                    o.image = "gfx/spring_jump_up.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    o.height = o.sprite.texture.height;
+                    o.width = o.sprite.texture.width;
+                }
+            }
+
+            return o;
+        });
+
+        this._nameToCT.set('gfx/vampire_wannabe.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            o.traits.add('walks');
+            o.traits.add('lethal');
+            o.traits.add('immune_to_lethal');
+            o.traits.add('stompable');
+
+            // 0: looking for target
+            o.phase = 0;
+            o.walkDirection = -1; // -1 = left.
+
+            o.hitObstacle = function() {
+                o.walkDirection *= -1;
+            }
+
+            o.tick = function() {
+                if (o.phase == 0) {
+                    if (o.traits.has('on_surface')) {
+                        let widen = 500;
+                        let objSides = params.world.select(o.x - widen, o.y, o.width + widen, o.height * 3);
+                        for (let sObj of objSides) {
+                            if (sObj.traits.has('hero')) {
+                                let dir = -1;
+                                if (sObj.x > o.x) {
+                                    dir = 1;
+                                }
+
+                                o.walkDirection = dir;
+                                o.phase = 40;
+
+                                if (Math.random() > 0.9) {
+                                    dir *= -1;
+                                }
+                                o.vx = dir * 20 * (0.5 + Math.random());
+                                o.vy = 14 * (0.5 + Math.random());
+                            }
+                        }
+
+                        // Didn't find someone to jump on.
+                        if (o.phase == 0) {
+                            o.vx += 0.2 * o.walkDirection;
+                        }
+
+                    }
+                } else {
+                    o.phase -= 1;
+                }
+            }
+
+            return o;
+        });
+
+        this._nameToCT.set('gfx/cloud.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._surface(o);
+            ObjectFactory._velocity(o);
+
+            //o.traits.add('sink_on_support');
+            o.traits.add('surface_top_only');
+
+            o.origHeight = o.height;
+            o.height *= 0.65;
+            o.zIndex = 75;
+            o.nSupport = 0;
+            o.initYPlaced = false;
+
+            o.tick = function() {
+                // If sink_on_support is not enabled, this will not apply.
+                if (false) {
+                    if (!o.initYPlaced) {
+                        o.initYPlaced = true;
+                        o.initY = o.y;
+                    }
+
+                    if (o.nSupport > 1) {
+                        let maxDisp = 2 * o.origHeight;
+                        let diff = o.nSupport * maxDisp - (o.initY - o.y);
+                        if (diff > 0) {
+                            o.vy = -o.nSupport * 0.5;
+                        } else {
+                            //o.vy = 0;
+                        }
+
+                        o.nSupport = 0;
+                    } else {
+                        if (o.y < o.initY) {
+                            o.vy += 0.1;
+                        } else {
+                            o.vy = 0;
+                        }
+                    }
+                }
+            }
+
             return o;
         });
 
         this._nameToCT.set('gfx/flying_fire.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             ObjectFactory._velocity(o, name);
-            ObjectFactory._gravity(o, name);
+            ObjectFactory._gravity(o);
             o.traits.add('lethal');
             o.traits.add('immune_to_lethal');
 
@@ -144,6 +615,7 @@ class ObjectFactory {
             ObjectFactory._surface(o);
             ObjectFactory._velocity(o, name);
             o.traits.add('moving_platform');
+            o.traits.add('offscreen_process');
             o.traits.add('immune_to_lethal');
 
             o.firstX = -1;
@@ -188,15 +660,89 @@ class ObjectFactory {
             o.traits.add('lethal');
             return o;
         });
-        
+
+        this._nameToCT.set('gfx/bomb.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            ObjectFactory._draggable(o);
+            o.traits.add('bomb');
+            o.traits.add('immune_to_lethal');
+
+            o.phase = -1;
+            o.ignite = function() {
+                if (o.phase == -1) {
+                    o.phase = 70;
+                    o.image = "gfx/bomb_ignited.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                }
+            }
+
+            o.tick = function() {
+                if (o.phase == 0) {
+                    o.traits.set('kill', 0);
+
+                    Collisions.makeSmokeAt(o, params.world, 20, o.height * 0.9);
+
+                    let explosion = world.getFactory().buildFromName("gfx/explosion_big.png");
+                    world.addObject(explosion);
+                    explosion.x = o.x - explosion.width / 2 + o.width / 2;
+                    explosion.y = o.y - explosion.height / 2 + o.height / 2;
+                    explosion.vx = 0;
+                    explosion.vy = 4;
+                    explosion.traits.set('kill', 1000);
+                    explosion.traits.set('explode_push', 2);
+                    params.world.notifyObjectMoved(explosion);
+
+                    for (let i = 0; i < 20; ++i) {
+                        let explosion = world.getFactory().buildFromName("gfx/explosion_small.png");
+                        world.addObject(explosion);
+                        explosion.x = o.x - explosion.width / 2 + o.width / 2;
+                        explosion.y = o.y - explosion.height / 2 + o.height / 2;
+                        explosion.vx = (Math.random() - 0.5) * 150;
+                        explosion.vy = 10 + Math.random() * 30;
+                        explosion.traits.set('kill', 1000);
+                        params.world.notifyObjectMoved(explosion);
+                    }
+                } else {
+                    if (o.phase > 0) {
+                        o.phase -= 1;
+                    }
+                }
+            }
+
+            return o;
+        });
+
         this._nameToCT.set('gfx/spike_ceiling_falling.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
             o.traits.add('lethal');
             o.traits.add('stomp_on_object_below');
+            o.traits.add('destroy_to_smoke');
+            // -2: ready, -1: disabled, 0: trigger fall, > 0 wait.
+            o.falling = -2;
 
-            o.objectBelow = function() {
-                ObjectFactory._gravity(o);
-                ObjectFactory._velocity(o);
+            o.tick = function() {
+                let isObjectBelow = ObjectFactory.isStompableObjectBelow(o, params.world);
+                if (isObjectBelow) {
+                    if (o.falling == -2) {
+                        o.falling = 20;
+                    }
+
+                    if (o.falling > 10 && o.falling % 3 == 0) {
+                        Collisions.makeSmokeAt(o, params.world, 1, o.height * 0.9);
+                    }
+                }
+
+                if (o.falling > -1) {
+                    o.falling -= 1;
+                }
+
+                if (o.falling == 0) {
+                    o.vy = -10;
+                    Audio.play('sfx/canon_shooting.ogg', 0.5, false);
+                }
             }
 
             return o;
@@ -210,25 +756,61 @@ class ObjectFactory {
             return o;
         });
 
+        this._nameToCT.set('gfx/button_floor.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            o.traits.add('button');
+
+            o.zIndex = 25;
+
+            //-1: up, >= -1: up
+            o.state = -1;
+
+            o.press = function() {
+                if (o.state == -1) {
+                    o.state = 1000;
+                    o.image = "gfx/button_floor_pressed.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+
+                    params.world.setBackgoundColor(0xcc0000);
+                }
+            }
+
+            o.tick = function() {
+                if (o.state > -1) {
+                    o.state -= 1;
+                }
+
+                if (o.state == 0) {
+                    o.image = "gfx/button_floor.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                }
+            }
+
+            return o;
+        });
+
         this._nameToCT.set('gfx/smoke_dust.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             ObjectFactory._velocity(o);
             ObjectFactory._gravity(o);
             o.traits.add('low_gravity');
             o.traits.add('immune_to_lethal');
+            o.traits.add('decoration');
             return o;
         });
 
         this._nameToCT.set('gfx/doggy.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
-            ObjectFactory._surface(o);
+            o.traits.add('decoration');
+            o.traits.add('stompable');
+            o.traits.add('destroy_to_squished');
             return o;
         });
 
         this._nameToCT.set('gfx/spikes.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             ObjectFactory._surface(o);
-            ObjectFactory._collides_on_surface(o);
+            ObjectFactory._stands_on_surface(o);
             o.traits.add('lethal');
             return o;
         });
@@ -237,13 +819,31 @@ class ObjectFactory {
             ObjectFactory._displayable(o, name);
             ObjectFactory._velocity(o);
             ObjectFactory._gravity(o);
-            ObjectFactory._collides_on_surface(o);
+            ObjectFactory._stands_on_surface(o);
+            o.traits.add('decoration');
             return o;
         });
 
         this._nameToCT.set('gfx/door_next_level.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             o.traits.add('to_next_level');
+            o.traits.add('offscreen_process');
+            o.traits.add('immune_to_lethal');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/door_next_level_wide.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            o.traits.add('to_next_level');
+            o.traits.add('offscreen_process');
+            o.traits.add('immune_to_lethal');
+            return o;
+        });
+
+        this._nameToCT.set('gfx/brick_gray_bg.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            o.traits.add('decoration');
+            o.zIndex = -50;
             return o;
         });
 
@@ -251,26 +851,81 @@ class ObjectFactory {
             ObjectFactory._displayable(o, name);
             ObjectFactory._velocity(o);
             ObjectFactory._gravity(o);
-            ObjectFactory._collides_on_surface(o);
+            ObjectFactory._stands_on_surface(o);
             o.traits.add('stompable');
-            o.traits.add('walks');
             o.traits.add('destroy_to_squished');
+            o.traits.add('walks');
+            o.traits.add('self_collide_change_dir');
             o.walkDirection = -1; // -1 = left.
+
+            o.hitObstacle = function() {
+                o.walkDirection *= -1;
+            }
+
+            o.tick = function() {
+                if (o.traits.has('on_surface')) {
+                    o.vx += 0.2 * o.walkDirection;
+                }
+            }
+            return o;
+        });
+
+        this._nameToCT.set('gfx/elephanko.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._gravity(o);
+            ObjectFactory._stands_on_surface(o);
+            o.traits.add('walks');
+
+            o.walkDirection = -1; // -1 = left.
+            o.hitObstacle = function() {
+                o.walkDirection *= -1;
+            }
+
+            o.tick = function() {
+                if (o.traits.has('on_surface')) {
+                    o.vx += 0.2 * o.walkDirection;
+                }
+            }
             return o;
         });
 
         this._nameToCT.set('gfx/stompy.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             ObjectFactory._velocity(o);
-            ObjectFactory._collides_on_surface(o);
+            ObjectFactory._stands_on_surface(o);
+            ObjectFactory._surface(o);
 
-            o.traits.add('lethal');
             o.traits.add('stomp_on_object_below');
             o.stompState = 'waiting';
             o.waitingCount = 25;
-            o.vy = 3;
+            //o.vy = 4.0;
+
+            o.initY = -1;
+            o.initYPlaced = false;
 
             o.tick = function() {
+                if (o.initYPlaced == false) {
+                    o.initY = o.y;
+                    o.initYPlaced = true;
+                    // First tick gets out of collision, don't waste
+                    // in case falling state + enemy below.
+                    return;
+                }
+
+                if (o.stompState == 'waiting') {
+                    let isObjectBelow = ObjectFactory.isStompableObjectBelow(o, params.world);
+
+                    if (isObjectBelow) {
+                        if (o.stompState == 'waiting') {
+                            o.stompState = 'falling';
+                            o.vy = -8;
+                            o.waitingCount = 100;
+                            return;
+                        }
+                    }
+                }
+
                 if (o.stompState == 'falling') {
                     if (o.waitingCount > 0) {
                         o.waitingCount -= 1;
@@ -289,30 +944,10 @@ class ObjectFactory {
                         o.waitingCount = 200;
                     }
                 }
-            }
 
-            o.objectBelow = function() {
-                if (o.stompState == 'waiting') {
-                    o.stompState = 'falling';
-                    o.vy = -10;
-                    o.waitingCount = 100;
-                }
-            }
-
-            return o;
-        });
-
-        this._nameToCT.set('gfx/l0_splash.png', function(name, o, params) {
-            ObjectFactory._displayable(o, name);
-            o.traits.add('decoration');
-            o.traits.add('splash');
-            o.next = false;
-            o.frameCount = 0;
-
-            o.tick = function() {
-                o.frameCount += 1;
-                if (o.frameCount > 100) {
-                    o.next = true;
+                if (o.y > o.initY) {
+                    o.y = o.initY;
+                    o.vy = 0;
                 }
             }
 
@@ -322,20 +957,29 @@ class ObjectFactory {
         this._nameToCT.set('gfx/squished.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
             ObjectFactory._velocity(o);
+            ObjectFactory._stands_on_surface(o);
             ObjectFactory._gravity(o);
-            ObjectFactory._collides_on_surface(o);
+            o.zIndex = -85;
+            return o;
+        });
+
+        this._nameToCT.set('gfx/stars_black_sky.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
             o.traits.add('decoration');
+            o.zIndex = -95;
             return o;
         });
 
         this._nameToCT.set('gfx/canon_horizontal.png', function(name, o, params) {
             ObjectFactory._displayable(o, name);
-            ObjectFactory._collides_on_surface(o);
+            ObjectFactory._stands_on_surface(o);
             ObjectFactory._surface(o);
 
-            let shootFreq = 150;
+            let shootFreq = Math.round(200 + 25 * Math.random());
 
-            o.shootNext = shootFreq + (shootFreq / 10) * (1 + Math.random());
+            o.zIndex = 75;
+            o.height *= 0.95;
+            o.shootNext = shootFreq;
             o.traits.add('canon_shoot');
 
             o.shoot = function() {
@@ -344,39 +988,141 @@ class ObjectFactory {
                 bullet.x = o.x - bullet.width;
                 bullet.y = o.y + o.height - bullet.height - 1;
                 bullet.traits.set('kill', 1000);
-                bullet.vx = -15 - 8 * Math.random();
+                bullet.vx = -5;
+                Audio.play('sfx/canon_shooting.ogg', 0.5, false);
+
+                // We BADLY need a proper function to create objects in world.
+                params.world.notifyObjectMoved(bullet);
             }
 
             o.tick = function() {
                 o.shootNext -= 1;
+
+                if (o.shootNext == Math.round(shootFreq * 0.3)) {
+                    o.image = "gfx/canon_horizontal_shoot_soon.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                }
+
                 if (o.shootNext < 0) {
-                    o.shootNext = shootFreq + (shootFreq / 10) * (1 + Math.random());
+                    o.image = "gfx/canon_horizontal.png";
+                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    o.shootNext = shootFreq;
                     o.shoot();
+                }
+            }
+
+            ObjectFactory._gravity(o);
+            //ObjectFactory._pushable(o);
+            return o;
+        });
+
+        this._nameToCT.set('gfx/canon_bullet_left.png', function(name, o, params) {
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._stands_on_surface(o);
+            ObjectFactory._velocity(o);
+            o.traits.add('stompable');
+            o.traits.add('bullet');
+            o.traits.add('destroy_to_smoke');
+
+            o.onCollide = function(cee) {
+                ObjectFactory._gravity(o);
+            }
+            return o;
+        });
+
+        this._nameToCT.set("gfx/hero_r0.png", function(name, o, params) {
+
+            ObjectFactory._displayable(o, name);
+            ObjectFactory._velocity(o);
+            ObjectFactory._stands_on_surface(o);
+            ObjectFactory._gravity(o);
+
+            o.traits.add('hero');
+            o.traits.add('tracked_by_camera');
+            o.zIndex = 50;
+
+            // l -> key
+            o.traits.add('controllable');
+            o.input = function(l) {
+                let obj = o;
+
+                let vxMax = 12;
+                if (l.key == 37 && l.type == 'up') {
+                    // left
+                    if (obj.vx - vxMax / 10 > -vxMax) {
+                        obj.vx -= vxMax / 10;
+                    }
+
+                    if (true) {
+                        let img_l = "gfx/hero_l0.png";
+                        obj.image = img_l;
+                        obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
+                    } else {
+                        if (obj.sprite.scale.x == 1) {
+                            //obj.sprite.texture.rotate = 10;
+                            //obj.sprite.scale.x = -1;
+                            //obj.sprite.x += obj.width;
+                        }
+                    }
+                } else if (l.key == 39 && l.type == 'up') {
+                    // right 
+                    if (obj.vx + vxMax / 10 < vxMax) {
+                        obj.vx += vxMax / 10;
+                    }
+
+                    if (true) {
+                        let img_l = "gfx/hero_r0.png";
+                        obj.image = img_l;
+                        obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
+                    } else {
+                        if (obj.sprite.scale.x == -1) {
+                            obj.sprite.scale.x = 1;
+                            //obj.sprite.x -= obj.width;
+                        }
+                    }
+                } else if (l.key == 38) {
+                    if (l.type == 'up') {
+                        obj.traits.set('press_jump', 5);
+
+                        // Prevent long-up press to re-jump after
+                        // object has landed; requires another press
+                        // from user.
+                        let skip = false;
+                        let nowMs = (new Date()).getTime();
+                        if (nowMs - l.unixtimeMs > 100) {
+                            skip = true;
+                        }
+
+                        if (!skip && obj.traits.has('on_surface') && !obj.traits.has('jumping')) {
+
+                            obj.vy = 10;
+
+                            obj.traits.set('on_surface', 0);
+                            obj.traits.set('jumping', 15);
+
+                            if (obj.traits.has('jump_boost')) {
+                                obj.vy += 20;
+                            }
+
+                            Audio.play('sfx/sfx_jumpland.ogg', 0.5, false);
+                        }
+
+                    } else if (l.type == 'down') {
+                        obj.traits.remove('jumping');
+                    } else {
+                        throw "unknown input";
+                    }
                 }
             }
 
             return o;
         });
 
-        this._nameToCT.set('gfx/canon_bullet_left.png', function(name, o, params) {
+        this._nameToCT.set("gfx/bg-forest.png", function(name, o, params) {
             ObjectFactory._displayable(o, name);
-            ObjectFactory._collides_on_surface(o);
-            ObjectFactory._velocity(o);
-            ObjectFactory._gravity(o);
-            o.traits.add('stompable');
-            o.traits.add('bullet');
-            o.traits.add('low_gravity');
-            return o;
-        });
-
-        this._nameToCT.set("gfx/hero_r0.png", function(name, o, params) {
-            ObjectFactory._displayable(o, name);
-            ObjectFactory._velocity(o);
-            ObjectFactory._collides_on_surface(o);
-            ObjectFactory._gravity(o);
-
-            o.traits.add('hero');
-            o.zIndex = 50;
+            o.traits.add('background_slow_scroll');
+            o.traits.add('decoration');
+            o.zIndex = -75;
             return o;
         });
 
@@ -388,27 +1134,31 @@ class ObjectFactory {
         });
     }
 
-    buildGameStateObject(actionName, actionData) {
-        let o = ObjectFactory._createDefaultObject();
-        o.traits.add('game_state');
-        o.action = actionName;
-        o.data = actionData;
-        return o;
-    }
-
     // Creates an object from the raw filename. Example block.png.
     // Params is {k:value} collection.
     buildFromName(name, params) {
 
         if (this._nameToCT.has(name)) {
             let o = ObjectFactory._createDefaultObject();
+            o.name = name;
             let params = {};
             params.world = this._world;
             params.factory = this;
+
+            // Done to make sure obj factory has access
+            // to width and height.
+            o.image = name;
+            this._world.loadSprite(o);
+
             return this._nameToCT.get(name)(name, o, params);
         }
 
         console.warn('Unknown object: ' + name);
-        return ObjectFactory._unknown(name);
+
+        let o = ObjectFactory._unknown(name);
+        o.traits.add('decoration');
+        o.image = name;
+        this._world.loadSprite(o);
+        return o;
     }
 }

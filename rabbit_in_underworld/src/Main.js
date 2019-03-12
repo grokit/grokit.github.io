@@ -4,7 +4,7 @@ if (!PIXI.utils.isWebGLSupported()) {
     type = "canvas"
 }
 
-let zoomLevel = 1.0;
+let zoomLevel = 1;
 //var autoScreenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 //let screenWidth = autoScreenWidth;
 //let screenWidth = 1200 / zoomLevel;
@@ -47,6 +47,22 @@ class RendererProxy {
         this._app = app;
     }
 
+    loadSprite(object) {
+
+        if (false && object.image.search('cloud') != -1) {
+            console.log('loading cloud');
+            console.trace();
+        }
+
+        object.sprite = new PIXI.Sprite(PIXI.loader.resources[object.image].texture);
+        object.height = object.sprite.texture.height;
+        object.width = object.sprite.texture.width;
+    }
+
+    setBackgoundColor(color) {
+        this._app.renderer.backgroundColor = color;
+    }
+
     addObject(object) {
         if (object.traits.has('text')) {
             object.sprite = new PIXI.Text(object.text, {
@@ -55,10 +71,6 @@ class RendererProxy {
                 fill: 0x0,
                 align: 'center'
             });
-        } else {
-            object.sprite = new PIXI.Sprite(PIXI.loader.resources[object.image].texture);
-            object.height = object.sprite.texture.height;
-            object.width = object.sprite.texture.width;
         }
 
         this.notifyObjectMoved(object);
@@ -104,14 +116,27 @@ function onGfxLoaded() {
     let levels = new Array();
 
     // Future: list from assets
-    //levels.push(PIXI.loader.resources['levels/l_exp.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_00_rabbit_in_house.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_01.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_02.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_03.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_04.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_05.json'].data);
-    levels.push(PIXI.loader.resources['levels/l_99_rabbit_in_safe_house.json'].data);
+    if (false) {
+        levels.push(PIXI.loader.resources['levels/gorilla.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_03.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_01.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_02_vampire_weekend.json'].data);
+        /*
+        levels.push(PIXI.loader.resources['levels/l_exp.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_01.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_bug_stomp.json'].data);
+        */
+    } else {
+        levels.push(PIXI.loader.resources['levels/l_00_rabbit_in_house.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_01.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_02.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_02_vampire_weekend.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_03.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_04.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_05.json'].data);
+        levels.push(PIXI.loader.resources['levels/l_99_rabbit_in_safe_house.json'].data);
+    }
+
     world.setLevels(levels);
 
     // Add link from world to rendered, such that in-engine
@@ -125,7 +150,7 @@ function onGfxLoaded() {
 
     let frameCount = 0;
     let closureGameLoop = function() {
-        if (1 || frameCount < 64) {
+        if (!Constants.isBlockAfterXFrames() || frameCount < 64) {
             requestAnimationFrame(closureGameLoop);
             gameLoop(engine, stage);
         }
@@ -148,7 +173,7 @@ function gameLoop(engine, stage) {
     if (Constants.isMeasureFPS()) {
         let fps = 1.0 / ((Date.now() - beforeEngine) / 1000.0);
         engineSpeed.push(fps);
-        if (engineSpeed.length > 60 * 5) {
+        if (engineSpeed.length > 60 * 2) {
             let t = 0;
             for (let i = 0; i < engineSpeed.length; ++i) {
                 t += engineSpeed[i];
@@ -160,8 +185,4 @@ function gameLoop(engine, stage) {
     }
 
     app.renderer.render(stage);
-}
-
-if (Constants.isMusic()) {
-    Audio.play('sfx/starling_full_mod.ogg', 0.5, true);
 }

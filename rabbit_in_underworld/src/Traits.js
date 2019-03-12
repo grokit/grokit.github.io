@@ -17,11 +17,16 @@ class Traits {
         return this._t.get(name);
     }
 
-    add(name) {
+    add(name, time = -1) {
+        // ::: just use set with -1 as default
+        if (time != -1) {
+            throw "Add is not meant to set a time. Did you mean set(...)?";
+        }
+
         this.set(name, -1);
     }
 
-    set(name, time) {
+    set(name, time = -1) {
         this._t.set(name, time);
     }
 
@@ -43,7 +48,13 @@ class Traits {
                 // remove that property.  
                 this.remove(kvp[0]);
             } else {
-                this.set(kvp[0], kvp[1] - 1);
+                if (kvp[0] == 'on_surface') {
+                    //Console.log('Subtract trait: ' + kvp[0]);
+                }
+
+                if (kvp[1] > 0) {
+                    this.set(kvp[0], kvp[1] - 1);
+                }
             }
         }
     }

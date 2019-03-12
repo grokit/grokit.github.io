@@ -39,11 +39,14 @@ class Input {
 
     static wireEngine(engine) {
         var keys = [];
+        // http://www.javascripter.net/faq/keycodes.htm
         keys.push(Input.keyboard(37)); // left
         keys.push(Input.keyboard(38)); // up
         keys.push(Input.keyboard(39)); // right 
         keys.push(Input.keyboard(40)); // down
         keys.push(Input.keyboard(74)); // j
+        keys.push(Input.keyboard(90)); // z
+        keys.push(Input.keyboard(88)); // x
 
         for (let key of keys) {
             key.press = function() {

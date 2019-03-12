@@ -7,7 +7,7 @@ class World {
 
         // How large are the squares in which we bucket objects to make
         // collision detection efficient.
-        this._dxy = 250;
+        this._dxy = 256;
 
         // Functions triggered when objects are added and removed
         // to link between our world and the renderer.
@@ -29,25 +29,38 @@ class World {
     }
 
     setLevels(levels) {
+        // :::::::AAA: Levels should just have name, with additional DS for next()?
+        // else: how to dynamically add dead / splash / map screens?
         this._levels = levels;
     }
 
-    loadLevel(n) {
+    setBackgoundColor(color) {
+        this._rendererNotify.setBackgoundColor(color);
+    }
+
+    clearLevelAndLoadNewOne(n) {
         if (n >= this._levels.length) {
             console.warn('Ran out of levels. Will modulo.');
             n = n % this._levels.length;
         }
 
-        let level = this._levels[n];
-        let objects = Level.load(level, this);
-
-        this._rendererNotify.clearAll();
         this._objects = new Map();
+        this._rendererNotify.clearAll();
+
+        let objects = Level.load(this._levels[n], this);
+
         for (let object of objects) {
+            if (!object.traits.has('decoration') && (object.width > this._dxy || object.height > this._dxy)) {
+                throw "Object too large for world square size.";
+            }
             this.addObject(object);
         }
 
         this._rendererNotify.applyZIndices();
+    }
+
+    loadSprite(object) {
+        this._rendererNotify.loadSprite(object);
     }
 
     addObject(object) {
@@ -70,8 +83,6 @@ class World {
     notifyObjectMoved(object) {
         let square = this.findOrCreateSquare(object);
         if (square != object.container) {
-            //Console.debug('Moving object ' + object.id + " from container.");
-
             let oldContainer = object.container;
             object.container = square;
             square.add(object);
@@ -93,12 +104,10 @@ class World {
     findOrCreateSquare(object) {
         let [squareX, squareY] = this.findSquareXY(object.x, object.y);
         if (!this._objects.has(squareX)) {
-            //Console.debug("Creating squareX: " + squareX);
             this._objects.set(squareX, new Map());
         }
 
         if (!this._objects.get(squareX).has(squareY)) {
-            //Console.debug("Creating x : " + squareX + ", squareY: " + squareY);
             this._objects.get(squareX).set(squareY, new Set());
         }
 
@@ -121,6 +130,48 @@ class World {
         }
 
         return objects;
+    }
+
+    // Select all objects in square. 
+    select(x, y, dx, dy) {
+        if (dx < 0 || dy < 0) {
+            throw "Do not use negative length.";
+        }
+
+        let objects = new Array();
+
+        let dedup = new Set();
+        // Find all squares that can intersect with selection.
+        for (let i = x - this._dxy; i <= x + dx + this._dxy; i += this._dxy) {
+            for (let j = y - this._dxy; j <= y + dy + this._dxy; j += this._dxy) {
+                let [squareX, squareY] = this.findSquareXY(i, j);
+                if (this._objects.has(squareX) && this._objects.get(squareX).has(squareY)) {
+                    for (let object of this._objects.get(squareX).get(squareY)) {
+                        objects.push(object);
+
+                        if (dedup.has(object.id)) {
+                            throw "Should never get same object twice.";
+                        }
+                        dedup.add(object.id);
+                    }
+                }
+            }
+        }
+
+        let dummy = {};
+        dummy.x = x;
+        dummy.y = y;
+        dummy.width = dx;
+        dummy.height = dy;
+
+        let of = new Array();
+        for (let obj of objects) {
+            if (Collisions.isCollide(dummy, obj)) {
+                of.push(obj);
+            }
+        }
+
+        return of;
     }
 
     // SO: don't need to worry about adding / deleting during

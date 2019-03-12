@@ -1,8 +1,8 @@
-/**
- * Loads json tiled (https://www.mapeditor.org/) level.
- */
 class Level {
 
+    /**
+     * Loads json tiled (https://www.mapeditor.org/) level.
+     */
     static load(level, world) {
         // Parse tile https://www.mapeditor.org/ json map.
         let width = level.width;
@@ -50,7 +50,7 @@ class Level {
                     ele.y = y * tileHeight;
 
                     if (ele.y < 0) {
-                        throw "ele.y < X";
+                        throw "ele.y < 0";
                     }
 
                     elems.add(ele);

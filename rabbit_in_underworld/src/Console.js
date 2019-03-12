@@ -1,5 +1,5 @@
 var priv_Console_LastCoutMs = Date.now() / 1000;
-var priv_Console_n = 0;
+var priv_Console_n = 100;
 
 class Console {
 
@@ -24,6 +24,20 @@ class Console {
     }
 
     static debug(txt) {
+        if (Console._tick()) {
+            console.log(txt);
+        }
+    }
+
+    static warning(txt) {
+        txt = 'WARNING: ' + txt;
+        if (Console._tick()) {
+            console.log(txt);
+        }
+    }
+
+    static error(txt) {
+        txt = 'ERROR: ' + txt;
         if (Console._tick()) {
             console.log(txt);
         }

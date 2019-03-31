@@ -4,13 +4,13 @@ Javascript engine / games I'm writing for fun.
 
 Play [Rabbit in Underworld](https://grokit.github.io/rabbit_in_underworld). See [source code](https://github.com/grokit/grokit.github.io/tree/master/rabbit_in_underworld).
 
-# license
+# License
 
-This is open-source, under MIT license, EXCEPT for:
+This is open-source, under **MIT license**, EXCEPT for:
 
 - Sound / music (rabbit_in_underworld/sounds/\*). This are not by me, therefore, their original license applies. Their license is contained in the node.md file in that directory.
 
-## str
+## License Details
 
 Copyright 2019 https://github.com/grokit
 

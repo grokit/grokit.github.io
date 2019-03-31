@@ -25,6 +25,10 @@ class ObjectFactory {
         o.x = -1;
         o.y = -1;
 
+        // 1.0: absolute / max
+        // 0.0: min
+        o.getSolidity = function(){return 0.5;}
+
         // Overload what happens here if there is record-keeping to do
         // every frame.
         o.tick = function() {}
@@ -119,6 +123,7 @@ class ObjectFactory {
             ObjectFactory._displayable(o, name);
             ObjectFactory._surface(o);
             o.traits.add('immune_to_lethal');
+            o.getSolidity = function(){return 0.9;}
             return o;
         });
 
@@ -126,6 +131,7 @@ class ObjectFactory {
             ObjectFactory._displayable(o, name);
             ObjectFactory._surface(o);
             o.traits.add('immune_to_lethal');
+            o.getSolidity = function(){return 0.9;}
             return o;
         });
 
@@ -157,8 +163,14 @@ class ObjectFactory {
             ObjectFactory._displayable(o, name);
             ObjectFactory._surface(o);
             o.traits.add('surface_top_only');
+            o.traits.add('no_overlap_kill');
             o.height *= 0.6;
             o.zIndex = -50;
+
+            o.getSolidity = function(){
+                return 0.05;
+            }
+
             return o;
         });
 
@@ -179,34 +191,34 @@ class ObjectFactory {
             return o;
         });
 
-        this._nameToCT.set('gfx/pants_gorilla.png', function(name, o, params) {
-            ObjectFactory._displayable(o, name);
-            ObjectFactory._velocity(o);
-            ObjectFactory._stands_on_surface(o);
-            ObjectFactory._gravity(o);
+        this._nameToCT.set('gfx/pants_gorilla_r0.png', function(name, o, params) {
+            // Inherit.
+            let nameParent = 'gfx/hero_r0.png';
+            o = params.world.getFactory()._nameToCT.get(nameParent)(nameParent, o, params);
+            o.image = 'gfx/pants_gorilla_r0.png';
+            params.world.getFactory().updateSprite(o);
 
-            o.traits.add('hero');
-            o.traits.add('tracked_by_camera');
+            // Adapt.
             o.traits.add('hero_strong_mode');
             o.traits.add('immune_to_lethal');
-            o.zIndex = 50;
             o.cooldown = 10;
+
+            o.tickParent = o.tick
             o.tick = function(){
+                o.tickParent();
                 o.cooldown = Math.min(10, o.cooldown +1);
             }
 
-            // l -> key
-            o.traits.add('controllable');
-            o.input = function(l) {
-                let obj = o;
-
-                let vxMax = 12;
-                let bomb = false;
-                if (l.key == 88 && l.type == 'up') {
-                    bomb = true;
-                }
+            o.inputParent = o.input;
+            o.input = function(l){
+                o.inputParent(l);
 
                 if ((l.key == 88 || l.key == 90) && l.type == 'up') {
+                    let bomb = false;
+                    if (l.key == 88 && l.type == 'up') {
+                        bomb = true;
+                    }
+
                     if(o.cooldown >= 10){
                         let projectile = params.world.getFactory().buildFromName("gfx/gorilla_projectile.png");
                         if(bomb){
@@ -229,62 +241,25 @@ class ObjectFactory {
 
                         o.cooldown -= 10;
                     }
-                } else if (l.key == 37 && l.type == 'up') {
-                    // left
-                    if (obj.vx - vxMax / 10 > -vxMax) {
-                        obj.vx -= vxMax / 10;
-                    }
-
-                    let img_l = "gfx/pants_gorilla_l.png";
-                    obj.image = img_l;
-                    obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
-                } else if (l.key == 39 && l.type == 'up') {
-                    // right 
-                    if (obj.vx + vxMax / 10 < vxMax) {
-                        obj.vx += vxMax / 10;
-                    }
-
-                    let img_l = "gfx/pants_gorilla.png";
-                    obj.image = img_l;
-                    obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
-
-                } else if (l.key == 38) {
-                    if (l.type == 'up') {
-                        obj.traits.set('press_jump', 5);
-
-                        // Prevent long-up press to re-jump after
-                        // object has landed; requires another press
-                        // from user.
-                        let skip = false;
-                        let nowMs = (new Date()).getTime();
-                        if (nowMs - l.unixtimeMs > 100) {
-                            skip = true;
-                        }
-
-                        if (!skip && obj.traits.has('on_surface') && !obj.traits.has('jumping')) {
-
-                            obj.vy = 10;
-
-                            obj.traits.set('on_surface', 0);
-                            obj.traits.set('jumping', 15);
-
-                            if (obj.traits.has('jump_boost')) {
-                                obj.vy += 20;
-                            }
-
-                            Audio.play('sfx/sfx_jumpland.ogg', 0.5, false);
-                        }
-
-                    } else if (l.type == 'down') {
-                        obj.traits.remove('jumping');
-                    } else {
-                        throw "unknown input";
-                    }
                 }
             }
 
             return o;
         });
+
+        this._nameToCT.set('gfx/turtle_r0.png', function(name, o, params) {
+            // Inherit.
+            let nameParent = 'gfx/hero_r0.png';
+            o = params.world.getFactory()._nameToCT.get(nameParent)(nameParent, o, params);
+            o.image = 'gfx/turtle_r0.png';
+            params.world.getFactory().updateSprite(o);
+
+            // Adapt.
+            o.speedFactor *= 0.5;
+
+            return o;
+        });
+
 
         // Little green stuff.
         this._nameToCT.set('gfx/jumpee.png', function(name, o, params) {
@@ -293,6 +268,7 @@ class ObjectFactory {
             ObjectFactory._gravity(o);
             ObjectFactory._stands_on_surface(o);
             o.traits.add('walks');
+            o.traits.add('no_overlap_kill');
 
             // 0: looking for target
             o.phase = 0;
@@ -323,8 +299,8 @@ class ObjectFactory {
                                         dir *= -1;
                                     }
 
-                                    o.vx = dir * 30 * (0.5 + Math.random());
-                                    o.vy = 24 * (0.5 + Math.random());
+                                    o.vx = dir * 20 * (0.5 + Math.random());
+                                    o.vy = 14 * (0.5 + Math.random());
                                 }
                             }
                         }
@@ -353,12 +329,12 @@ class ObjectFactory {
 
                 if (tolerance == Math.floor(maxTolerance * 0.8)) {
                     o.image = "gfx/block_fall_on_touch_damaged.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                 }
 
                 if (tolerance == Math.floor(maxTolerance * 0.2)) {
                     o.image = "gfx/block_fall_on_touch_damaged_02.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                 }
 
                 if (tolerance == 0) {
@@ -379,12 +355,12 @@ class ObjectFactory {
 
                         if (tolerance == maxTolerance) {
                             o.image = "gfx/block_fall_on_touch.png";
-                            o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                            params.world.getFactory().updateSprite(o);
                         }
 
                         if (tolerance == Math.floor(maxTolerance * 0.2) + 1) {
                             o.image = "gfx/block_fall_on_touch_damaged.png";
-                            o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                            params.world.getFactory().updateSprite(o);
                         }
                     }
                 }
@@ -447,17 +423,16 @@ class ObjectFactory {
 
             o.onWalkedOn = function(crr) {
                 o.image = "gfx/spring_jump_up_extended.png";
-                o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                params.world.getFactory().updateSprite(o);
                 o.height = o.sprite.texture.height;
                 o.width = o.sprite.texture.width;
 
                 crr.y = o.y + o.height;
 
-                crr.vy += 15;
-                crr.vy += 20;
+                crr.vy += 18;
                 o.phase = 25;
 
-                Audio.play('sfx/object_generic_squished.ogg', 0.5, false);
+                Audio.play('sounds/sfx/object_generic_squished.ogg', 0.5, false);
             }
 
             o.tick = function() {
@@ -467,7 +442,7 @@ class ObjectFactory {
 
                 if (o.phase == 0) {
                     o.image = "gfx/spring_jump_up.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                     o.height = o.sprite.texture.height;
                     o.width = o.sprite.texture.width;
                 }
@@ -536,42 +511,18 @@ class ObjectFactory {
             ObjectFactory._surface(o);
             ObjectFactory._velocity(o);
 
-            //o.traits.add('sink_on_support');
             o.traits.add('surface_top_only');
+            o.traits.add('no_overlap_kill');
+
+            o.getSolidity = function(){
+                return 0.05;
+            }
 
             o.origHeight = o.height;
             o.height *= 0.65;
             o.zIndex = 75;
             o.nSupport = 0;
             o.initYPlaced = false;
-
-            o.tick = function() {
-                // If sink_on_support is not enabled, this will not apply.
-                if (false) {
-                    if (!o.initYPlaced) {
-                        o.initYPlaced = true;
-                        o.initY = o.y;
-                    }
-
-                    if (o.nSupport > 1) {
-                        let maxDisp = 2 * o.origHeight;
-                        let diff = o.nSupport * maxDisp - (o.initY - o.y);
-                        if (diff > 0) {
-                            o.vy = -o.nSupport * 0.5;
-                        } else {
-                            //o.vy = 0;
-                        }
-
-                        o.nSupport = 0;
-                    } else {
-                        if (o.y < o.initY) {
-                            o.vy += 0.1;
-                        } else {
-                            o.vy = 0;
-                        }
-                    }
-                }
-            }
 
             return o;
         });
@@ -582,12 +533,14 @@ class ObjectFactory {
             ObjectFactory._gravity(o);
             o.traits.add('lethal');
             o.traits.add('immune_to_lethal');
+            o.traits.add('low_gravity');
+            o.traits.add('no_overlap_kill');
 
             o.firstY = -1;
             o.paused = -1;
-            o.speed = 25;
+            o.speed = 10;
             o.zIndex = -5;
-            o.pauseTime = 100 + 25 * Math.random();
+            o.pauseTime = 120 + 25 * Math.random();
 
             o.tick = function() {
                 if (o.paused >= 0) {
@@ -620,7 +573,7 @@ class ObjectFactory {
 
             o.firstX = -1;
             o.paused = -1;
-            o.speed = 2;
+            o.speed = 1.8;
             o.dir = 1;
             o.vx = o.speed;
             o.span = -1;
@@ -674,7 +627,7 @@ class ObjectFactory {
                 if (o.phase == -1) {
                     o.phase = 70;
                     o.image = "gfx/bomb_ignited.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                 }
             }
 
@@ -689,9 +642,9 @@ class ObjectFactory {
                     explosion.x = o.x - explosion.width / 2 + o.width / 2;
                     explosion.y = o.y - explosion.height / 2 + o.height / 2;
                     explosion.vx = 0;
-                    explosion.vy = 4;
+                    explosion.vy = 7;
                     explosion.traits.set('kill', 1000);
-                    explosion.traits.set('explode_push', 2);
+                    explosion.traits.set('explosion_applies_outward_force', 2);
                     params.world.notifyObjectMoved(explosion);
 
                     for (let i = 0; i < 20; ++i) {
@@ -699,8 +652,8 @@ class ObjectFactory {
                         world.addObject(explosion);
                         explosion.x = o.x - explosion.width / 2 + o.width / 2;
                         explosion.y = o.y - explosion.height / 2 + o.height / 2;
-                        explosion.vx = (Math.random() - 0.5) * 150;
-                        explosion.vy = 10 + Math.random() * 30;
+                        explosion.vx = (Math.random() - 0.5) * 8;
+                        explosion.vy = 10 + Math.random() * 5;
                         explosion.traits.set('kill', 1000);
                         params.world.notifyObjectMoved(explosion);
                     }
@@ -741,7 +694,7 @@ class ObjectFactory {
 
                 if (o.falling == 0) {
                     o.vy = -10;
-                    Audio.play('sfx/canon_shooting.ogg', 0.5, false);
+                    Audio.play('sounds/sfx/canon_shooting.ogg', 0.5, false);
                 }
             }
 
@@ -769,7 +722,7 @@ class ObjectFactory {
                 if (o.state == -1) {
                     o.state = 1000;
                     o.image = "gfx/button_floor_pressed.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
 
                     params.world.setBackgoundColor(0xcc0000);
                 }
@@ -782,7 +735,7 @@ class ObjectFactory {
 
                 if (o.state == 0) {
                     o.image = "gfx/button_floor.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                 }
             }
 
@@ -837,6 +790,7 @@ class ObjectFactory {
             o.traits.add('to_next_level');
             o.traits.add('offscreen_process');
             o.traits.add('immune_to_lethal');
+            o.traits.add('camera_ignore');
             return o;
         });
 
@@ -858,6 +812,10 @@ class ObjectFactory {
             o.traits.add('self_collide_change_dir');
             o.walkDirection = -1; // -1 = left.
 
+            o.getSolidity = function(){
+                return 0.25;
+            }
+
             o.hitObstacle = function() {
                 o.walkDirection *= -1;
             }
@@ -867,6 +825,32 @@ class ObjectFactory {
                     o.vx += 0.2 * o.walkDirection;
                 }
             }
+            return o;
+        });
+
+        this._nameToCT.set('gfx/fancy_city_dweller.png', function(name, o, params) {
+            // Inherit.
+            let nameParent = 'gfx/mr_spore.png';
+            o = params.world.getFactory()._nameToCT.get(nameParent)(nameParent, o, params);
+            o.image = 'gfx/fancy_city_dweller.png';
+            params.world.getFactory().updateSprite(o);
+
+            // Adapt.
+            o.traits.remove('stompable');
+            o.traits.remove('destroy_to_squished');
+            o.traits.add('push_hero');
+
+            o.tick = function() {
+                if (o.traits.has('on_surface')) {
+                    o.vx += 0.3 * o.walkDirection;
+
+                    if(Math.random() > 0.995){
+                        o.vy = 10;
+                        o.vx = (0.5 - Math.random()) * 50;
+                    }
+                }
+            }
+
             return o;
         });
 
@@ -903,6 +887,10 @@ class ObjectFactory {
 
             o.initY = -1;
             o.initYPlaced = false;
+
+            o.getSolidity = function(){
+                return 0.8;
+            }
 
             o.tick = function() {
                 if (o.initYPlaced == false) {
@@ -960,6 +948,9 @@ class ObjectFactory {
             ObjectFactory._stands_on_surface(o);
             ObjectFactory._gravity(o);
             o.zIndex = -85;
+            o.getSolidity = function(){
+                return 0.25;
+            }
             return o;
         });
 
@@ -989,7 +980,7 @@ class ObjectFactory {
                 bullet.y = o.y + o.height - bullet.height - 1;
                 bullet.traits.set('kill', 1000);
                 bullet.vx = -5;
-                Audio.play('sfx/canon_shooting.ogg', 0.5, false);
+                Audio.play('sounds/sfx/canon_shooting.ogg', 0.5, false);
 
                 // We BADLY need a proper function to create objects in world.
                 params.world.notifyObjectMoved(bullet);
@@ -1000,12 +991,12 @@ class ObjectFactory {
 
                 if (o.shootNext == Math.round(shootFreq * 0.3)) {
                     o.image = "gfx/canon_horizontal_shoot_soon.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                 }
 
                 if (o.shootNext < 0) {
                     o.image = "gfx/canon_horizontal.png";
-                    o.sprite.texture = PIXI.Texture.fromImage(o.image);
+                    params.world.getFactory().updateSprite(o);
                     o.shootNext = shootFreq;
                     o.shoot();
                 }
@@ -1024,9 +1015,6 @@ class ObjectFactory {
             o.traits.add('bullet');
             o.traits.add('destroy_to_smoke');
 
-            o.onCollide = function(cee) {
-                ObjectFactory._gravity(o);
-            }
             return o;
         });
 
@@ -1040,46 +1028,30 @@ class ObjectFactory {
             o.traits.add('hero');
             o.traits.add('tracked_by_camera');
             o.zIndex = 50;
+            o.speedFactor = 1.0;
 
-            // l -> key
             o.traits.add('controllable');
             o.input = function(l) {
                 let obj = o;
 
-                let vxMax = 12;
+                let vxMax = 5.5 * o.speedFactor;
                 if (l.key == 37 && l.type == 'up') {
                     // left
                     if (obj.vx - vxMax / 10 > -vxMax) {
                         obj.vx -= vxMax / 10;
                     }
 
-                    if (true) {
-                        let img_l = "gfx/hero_l0.png";
-                        obj.image = img_l;
-                        obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
-                    } else {
-                        if (obj.sprite.scale.x == 1) {
-                            //obj.sprite.texture.rotate = 10;
-                            //obj.sprite.scale.x = -1;
-                            //obj.sprite.x += obj.width;
-                        }
-                    }
+                    obj.image = obj.image.replace('_r0', '_l0');
+                    params.world.getFactory().updateSprite(obj);
                 } else if (l.key == 39 && l.type == 'up') {
                     // right 
                     if (obj.vx + vxMax / 10 < vxMax) {
                         obj.vx += vxMax / 10;
                     }
 
-                    if (true) {
-                        let img_l = "gfx/hero_r0.png";
-                        obj.image = img_l;
-                        obj.sprite.texture = PIXI.Texture.fromImage(obj.image);
-                    } else {
-                        if (obj.sprite.scale.x == -1) {
-                            obj.sprite.scale.x = 1;
-                            //obj.sprite.x -= obj.width;
-                        }
-                    }
+                    obj.image = obj.image.replace('_l0', '_r0');
+                    params.world.getFactory().updateSprite(obj);
+
                 } else if (l.key == 38) {
                     if (l.type == 'up') {
                         obj.traits.set('press_jump', 5);
@@ -1095,16 +1067,16 @@ class ObjectFactory {
 
                         if (!skip && obj.traits.has('on_surface') && !obj.traits.has('jumping')) {
 
-                            obj.vy = 10;
+                            obj.vy = 6*o.speedFactor;
 
                             obj.traits.set('on_surface', 0);
                             obj.traits.set('jumping', 15);
 
                             if (obj.traits.has('jump_boost')) {
-                                obj.vy += 20;
+                                obj.vy += 6*o.speedFactor;
                             }
 
-                            Audio.play('sfx/sfx_jumpland.ogg', 0.5, false);
+                            Audio.play('sounds/sfx/jumpland.ogg', 0.5, false);
                         }
 
                     } else if (l.type == 'down') {
@@ -1121,6 +1093,7 @@ class ObjectFactory {
         this._nameToCT.set("gfx/bg-forest.png", function(name, o, params) {
             ObjectFactory._displayable(o, name);
             o.traits.add('background_slow_scroll');
+            o.traits.add('camera_ignore');
             o.traits.add('decoration');
             o.zIndex = -75;
             return o;
@@ -1132,6 +1105,10 @@ class ObjectFactory {
             o.size = params.size;
             return o;
         });
+    }
+
+    updateSprite(obj){
+        this._world.updateSprite(obj);
     }
 
     // Creates an object from the raw filename. Example block.png.

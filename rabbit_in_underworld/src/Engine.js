@@ -15,6 +15,7 @@ class Engine {
 
         this._time = Date.now() / 1000;
         this._camera = new Camera();
+        this._camera.setScreen(screenWidth, screenHeight);
         this._input = new Set();
         this._fpsData = new Array();
 
@@ -53,8 +54,7 @@ class Engine {
         let objectsInScreen = this._world.objectsIterator();
         for (let obj of objectsInScreen) {
             if (obj.traits.has('hero')) {
-                this._camera._x = obj.x;
-                this._camera._y = obj.y;
+                this._camera.notifyTrackedObject(obj, true);
             }
         }
     }
@@ -66,7 +66,7 @@ class Engine {
     // Rely on this running at 60 FPS.
     onTime(timeInsecond) {
         if (Constants.isSlowDown()) {
-            for (let i = 0; i < 1e8; ++i) {
+            for (let i = 0; i < 2*1e8; ++i) {
                 let y = i * i;
             }
         }
@@ -74,24 +74,15 @@ class Engine {
         let ds = timeInsecond - this._time;
         this._time = timeInsecond;
 
+        //this._camera.setBoundary(this._world.getLevelBoundary());
         this._gameOverseer.notifyBegin();
 
-        let margin = 64 * 6;
+        let margin = Constants.blockSize() * 6;
         let objectsInScreen = this._world.select(
             this._camera.getX() - margin,
             this._camera.getY() - margin,
             this.getScreenGeometry()[0] + 2 * margin,
             this.getScreenGeometry()[1] + 2 * margin);
-
-        if (Math.random() > 1.05) {
-            console.log('nobj: ' + objectsInScreen.length);
-            let all = this._world.objectsIterator();
-            let i = 0;
-            for (let obj of all) {
-                i += 1;
-            }
-            console.log('nobj all: ' + i);
-        }
 
         if (objectsInScreen.length == 0) {
             this.forceFocusOnHero();
@@ -129,8 +120,8 @@ class Engine {
             // |
             // -----> x+
             if (obj.traits.has('gravity')) {
-                let pullForce = 1.1;
-                let friction = 0.8 / 10;
+                let pullForce = 0.5;
+                let friction = 0.1;
 
                 if (obj.traits.has('on_surface')) {
                     friction *= 1.5;
@@ -139,7 +130,7 @@ class Engine {
                 // ::-: instead of having this, gravity override should be
                 // in state which is associated with gravity.
                 if (obj.traits.has('low_gravity')) {
-                    pullForce /= 3.0;
+                    pullForce /= 2.0;
                     friction /= 2.0;
                 }
 
@@ -153,11 +144,11 @@ class Engine {
                 if (!obj.traits.has('jumping')) {
                     obj.vy -= pullForce;
 
-                    let vyMax = 100;
+                    let vyMax = 10;
                     if (obj.vy < 0) {
                         obj.vy = Math.max(obj.vy, -vyMax);
                     } else {
-                        obj.vy = Math.min(obj.vy, vyMax);
+                        obj.vy = Math.min(obj.vy, 1.5*vyMax);
                     }
                 }
             }
@@ -200,26 +191,6 @@ class Engine {
                 if (nearbyObj != obj) {
                     if (Collisions.isCollide(nearbyObj, obj)) {
                         Collisions.collide(nearbyObj, obj, this._world, this);
-                    }
-                }
-            }
-        }
-
-        // :::: tmp for tests
-        if (false) {
-            for (let obj of this._world.objectsIterator()) {
-                if (obj.traits.has('hero')) {
-
-                    // This is incorrect now -- select y should be pos.
-                    let under = this._world.select(obj.x, obj.y - 1, obj.width, -62);
-
-                    for (let und of under) {
-
-                        let img_l = "gfx/hero_l0.png";
-                        if (und.image != img_l) {
-                            und.image = img_l;
-                            und.sprite.texture = PIXI.Texture.fromImage(obj.image);
-                        }
                     }
                 }
             }

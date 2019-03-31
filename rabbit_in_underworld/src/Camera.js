@@ -13,14 +13,20 @@ class Camera {
     constructor() {
         this._x = 0;
         this._y = 0;
-        // ::: err--- that should come from engine.
-        this._baseY = 4 * 64;
-        // ... this too
-        this._offsetX = 3 * 64;
 
-        // minX, minY, maxX, maxY
-        // this._dimensions = [0, 0, 0, 0];
-        // ^^ should come from level, since don't want dynamic here...
+        // [minX, minY, maxX, maxY]
+        this._levelBoundary = [];
+
+        // width, heigh
+        this._screen = [];
+    }
+
+    setBoundary(boundary){
+        this._levelBoundary = boundary;
+    }
+
+    setScreen(width, height){
+        this._screen = [width, height];
     }
 
     getX() {
@@ -31,14 +37,64 @@ class Camera {
         return this._y;
     }
 
-    notifyTrackedObject(obj) {
-        this._x = obj.x - this._offsetX;
+    // Will go towards target, but at a gradual speed.
+    // Use to make smooth transitions.
+    transferFunction(actual, target){
+        let speed = Math.min(4 / 10, Math.abs(actual - target) / 100);
+        return actual + (target-actual)*speed;
+        // If you are about to fall off screen, just force. ??
+    }
 
-        let target = Math.max(this._baseY, obj.y - this._baseY);
+    notifyTrackedObject(obj, immediate=false) {
+        if(this._levelBoundary.length != 4){
+            throw "bad boundary";
+        }
+        if(this._screen.length != 2){
+            throw "bad screen";
+        }
 
-        // --> Math.max ?
-        let speed = 1 / 10 + Math.min(4 / 10, Math.abs(this.getY() - target) / 100);
+        // Camera doesn't center directly on object, or else it would
+        // bet at bottom left of the screen.
+        let offsetX = 3 * obj.width;
 
-        this._y -= (this.getY() - target) * speed;
+        // The x-pos is basically fixed at a specific point on the 
+        // left side of the screen. This will not work well if we sometimes
+        // have to go left (don't see far ahead).
+        this._x = obj.x - offsetX;
+
+        // The y-post should bias towards the ground, and for most of the
+        // game, not move at all (unless we are almost reaching top of screen).
+        let topBottomBars = 2* Constants.blockSize();
+        let targetY = this.getY(); 
+        
+        let edgeYMax = this.getY() + this._screen[1] - topBottomBars; 
+        if(obj.y + obj.height > edgeYMax){
+            targetY = this.getY() + (obj.y + obj.height - edgeYMax);
+        }
+
+        let edgeYMin = this.getY() + topBottomBars*2; 
+        if(edgeYMin >= edgeYMax){
+            throw "Camera edges mismatch.";
+        }
+
+        if(obj.y < edgeYMin){
+            targetY = this.getY() + (obj.y - edgeYMin);
+        }
+
+        if(!immediate){
+            this._y = this.transferFunction(this.getY(), targetY);
+        }else{
+            this._y = targetY;
+            this._x = obj.x - offsetX;
+        }
+
+        // Camera cannot look outside of world boundaries.
+        // This avoids camera showing "before" or "after" end of level.
+        if(true){
+            this._x = Math.max(this._x, this._levelBoundary[0]);
+            this._x = Math.min(this._x, this._levelBoundary[2] - this._screen[0]);
+            this._y = Math.max(this._y, this._levelBoundary[1]);
+            this._y = Math.min(this._y, this._levelBoundary[3] - this._screen[1] + obj.height*6);
+        }
     }
 }

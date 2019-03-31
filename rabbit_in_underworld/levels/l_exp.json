@@ -15,7 +15,7 @@
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.0.3",
- "tileheight":64,
+ "tileheight":32,
  "tilesets":[
         {
          "columns":0,
@@ -36,8 +36,8 @@
              "0":
                 {
                  "image":"..\/gfx\/ground_lr.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "1":
                 {
@@ -49,30 +49,30 @@
                 {
                  "image":"..\/gfx\/canon_bullet_left.png",
                  "imageheight":40,
-                 "imagewidth":64
+                 "imagewidth":32
                 },
              "11":
                 {
                  "image":"..\/gfx\/door_next_level.png",
                  "imageheight":108,
-                 "imagewidth":64
+                 "imagewidth":32
                 },
              "12":
                 {
                  "image":"..\/gfx\/block_fall_on_touch.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "13":
                 {
                  "image":"..\/gfx\/block_pushable.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "14":
                 {
                  "image":"..\/gfx\/spike_ceiling_falling.png",
-                 "imageheight":64,
+                 "imageheight":32,
                  "imagewidth":51
                 },
              "15":
@@ -84,31 +84,31 @@
              "17":
                 {
                  "image":"..\/gfx\/brick_gray_bg.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "18":
                 {
                  "image":"..\/gfx\/button_floor.png",
                  "imageheight":27,
-                 "imagewidth":64
+                 "imagewidth":32
                 },
              "19":
                 {
                  "image":"..\/gfx\/wood_texture.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "2":
                 {
                  "image":"..\/gfx\/unknown.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "20":
                 {
                  "image":"..\/gfx\/lava.png",
-                 "imageheight":64,
+                 "imageheight":32,
                  "imagewidth":128
                 },
              "21":
@@ -120,14 +120,14 @@
              "22":
                 {
                  "image":"..\/gfx\/cloud.png",
-                 "imageheight":64,
+                 "imageheight":32,
                  "imagewidth":256
                 },
              "23":
                 {
                  "image":"..\/gfx\/spring_jump_up.png",
                  "imageheight":39,
-                 "imagewidth":64
+                 "imagewidth":32
                 },
              "24":
                 {
@@ -139,31 +139,31 @@
                 {
                  "image":"..\/gfx\/mr_spore.png",
                  "imageheight":59,
-                 "imagewidth":64
+                 "imagewidth":32
                 },
              "4":
                 {
                  "image":"..\/gfx\/tombstone.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "5":
                 {
                  "image":"..\/gfx\/ground_lr2.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "6":
                 {
                  "image":"..\/gfx\/spikes.png",
                  "imageheight":26,
-                 "imagewidth":64
+                 "imagewidth":32
                 },
              "7":
                 {
                  "image":"..\/gfx\/doggy.png",
-                 "imageheight":64,
-                 "imagewidth":64
+                 "imageheight":32,
+                 "imagewidth":32
                 },
              "8":
                 {
@@ -175,12 +175,12 @@
                 {
                  "image":"..\/gfx\/canon_horizontal.png",
                  "imageheight":160,
-                 "imagewidth":64
+                 "imagewidth":32
                 }
             },
          "tilewidth":256
         }],
- "tilewidth":64,
+ "tilewidth":32,
  "type":"map",
  "version":1,
  "width":100

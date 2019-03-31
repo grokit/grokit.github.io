@@ -36,42 +36,28 @@ class GameOverseer {
         }
     }
 
-    _listMusic() {
-        let music = new Array();
-        music.push('sfx/music/music_peaceful_contemplative_starling.ogg');
-        music.push('sfx/music/twinmusicom_8_bit_march.ogg');
-        music.push('sfx/music/twinmusicom_nes_overworld.ogg');
-        music.push('sfx/music/music_juhanijunkala_chiptune_01.ogg');
-        return music;
-    }
-
     _pickMusic(levelNo) {
-        let tracks = this._listMusic();
-        if (levelNo == 0) {
-            return tracks[0];
-        }
-
-        return tracks[1 + levelNo % (tracks.length - 1)];
+        let tracks = AssetsList.listMusic();
+        return tracks[levelNo % (tracks.length - 1)];
     }
 
-    _clearLevelAndLoadNewOne() {
-        console.log('load level: ' + this._levelNo);
-        this._world.clearLevelAndLoadNewOne(this._levelNo);
-        this._engine.forceFocusOnHero();
+    _clearLevelAndLoadNewOne(levelNo) {
+        console.log('load level: ' + levelNo);
+        this._world.clearLevelAndLoadNewOne(levelNo);
         Audio.stopAll();
-        Audio.play(this._pickMusic(this._levelNo), 0.3, true);
+        Audio.play(this._pickMusic(levelNo), 0.3, true);
     }
 
     notifyEnd() {
         if (this._nextLevel) {
             this._nextLevel = false;
 
-            Audio.stopAll();
-            Audio.play('sfx/victory_victory.ogg', 0.5, false);
             this._levelNo += 1;
-            let transitionLen = 200;
+            let transitionLen = 170;
             this._pauseState = transitionLen;
-            this._world.clearLevelAndLoadNewOne(this._levelNo);
+            this._clearLevelAndLoadNewOne(this._levelNo);
+            Audio.stopAll();
+            Audio.play('sounds/sfx/victory_victory.ogg', 0.5, false);
 
             for (let obj of this._world.objectsIterator()) {
                 // This effectively freezes everything.
@@ -84,12 +70,6 @@ class GameOverseer {
                 }
                 if (isTracked) {
                     obj.traits.add('tracked_by_camera');
-
-                    // Can take lots of iterations for camera to be
-                    // completely stabilized.
-                    for (let i = 0; i < 100; ++i) {
-                        this._engine.getCamera().notifyTrackedObject(obj);
-                    }
                 }
             }
 
@@ -119,15 +99,17 @@ class GameOverseer {
         }
 
         if (this._pauseState == 1) {
-            this._clearLevelAndLoadNewOne();
+            this._clearLevelAndLoadNewOne(this._levelNo);
         } else if (this._nTick == 0) {
             // Initial state. Load level.
-            this._clearLevelAndLoadNewOne();
+            console.log('ntick 0');
+            this._clearLevelAndLoadNewOne(this._levelNo);
         } else if (this._nHeros == 0) {
+            console.log('nhero 0');
             this._nFramesWithoutHero += 1;
             if (this._nFramesWithoutHero == 120) {
                 this._nFramesWithoutHero = 0;
-                this._clearLevelAndLoadNewOne();
+                this._clearLevelAndLoadNewOne(this._levelNo);
             }
         }
 

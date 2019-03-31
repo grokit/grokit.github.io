@@ -2,13 +2,14 @@ class Level {
 
     /**
      * Loads json tiled (https://www.mapeditor.org/) level.
+     * Docs: https://doc.mapeditor.org/en/stable/reference/json-map-format/
      */
-    static load(level, world) {
+    static load(tiledLevelJSON, world) {
         // Parse tile https://www.mapeditor.org/ json map.
-        let width = level.width;
-        let height = level.height;
-        let tileWidth = level.tilewidth;
-        let tileHeight = level.tileheight;
+        let width = tiledLevelJSON.width;
+        let height = tiledLevelJSON.height;
+        let tileWidth = tiledLevelJSON.tilewidth;
+        let tileHeight = tiledLevelJSON.tileheight;
 
         // Load a map of all tiles:
         // id -> "gfx/image.png"
@@ -21,7 +22,7 @@ class Level {
         // width
         // height
         let tileIds = {};
-        for (let tileset of level.tilesets) {
+        for (let tileset of tiledLevelJSON.tilesets) {
             for (let key in tileset.tiles) {
                 tileIds[key] = tileset.tiles[key].image;
                 // ../gfx/tree_02.png -> gfx/tree_02.png
@@ -31,15 +32,14 @@ class Level {
             }
         }
 
-        // ::-:
-        // This is definitely odd that we need world in order to just
+        // This is odd that we need world in order to just
         // create object. This is such that those objects have a hook
         // in world in order to add themselves dynamically. 
-        // Look for better way.
+        // ::: can I just leave world to be null for this case?
         let factory = new ObjectFactory(world);
 
         let elems = new Set();
-        for (let layer of level.layers) {
+        for (let layer of tiledLevelJSON.layers) {
             for (let i = 0; i < layer.data.length; ++i) {
                 if (layer.data[i] != 0) {
                     let id = layer.data[i] - 1;
@@ -58,6 +58,16 @@ class Level {
             }
         }
 
-        return elems;
+        let level = new Level();
+        level.objects = elems;
+
+        level.backgroundColor = 0x000000;
+
+        let v = tiledLevelJSON.backgroundcolor;
+        if(v!=null){
+            let rgb = parseInt('0x'+v.substring(1,3))*256*256 + parseInt('0x'+v.substring(3,5))*256 + parseInt('0x'+v.substring(5,7));
+            level.backgroundColor = rgb;
+        }
+        return level;
     }
 }

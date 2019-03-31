@@ -1,4 +1,4 @@
-[COPY]
+[COPY] (manual from note_copyright.md)
 
 # midi
 

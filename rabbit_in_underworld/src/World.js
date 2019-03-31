@@ -7,17 +7,30 @@ class World {
 
         // How large are the squares in which we bucket objects to make
         // collision detection efficient.
-        this._dxy = 256;
+        this._dxy = Constants.blockSize()*4;
 
         // Functions triggered when objects are added and removed
         // to link between our world and the renderer.
-        this._rendererNotify = null;
+        this._rendererProxy = null;
 
         this._levels = new Array();
+
+        // (minX, minY, maxX, maxY) of non-decoration objects.
+        this._levelBoundary = [];
+
+        this._engine = null;
+    }
+
+    setEngine(engine){
+        this._engine = engine;
     }
 
     setObjectFactory(factory) {
         this._factory = factory;
+    }
+
+    getLevelBoundary(){
+        return this._levelBoundary;
     }
 
     getFactory() {
@@ -25,7 +38,7 @@ class World {
     }
 
     setRendererNotify(rendererNotify) {
-        this._rendererNotify = rendererNotify;
+        this._rendererProxy = rendererNotify;
     }
 
     setLevels(levels) {
@@ -35,7 +48,7 @@ class World {
     }
 
     setBackgoundColor(color) {
-        this._rendererNotify.setBackgoundColor(color);
+        this._rendererProxy.setBackgoundColor(color);
     }
 
     clearLevelAndLoadNewOne(n) {
@@ -45,22 +58,43 @@ class World {
         }
 
         this._objects = new Map();
-        this._rendererNotify.clearAll();
+        this._rendererProxy.clearAll();
 
-        let objects = Level.load(this._levels[n], this);
+        let level = Level.load(this._levels[n], this);
+        console.log('bg: ' + level.backgroundColor);
+        this._rendererProxy.setBackgoundColor(level.backgroundColor);
 
-        for (let object of objects) {
+        let minX = 1e9;
+        let minY = 1e9;
+        let maxX = -1e9;
+        let maxY = -1e9;
+        for (let object of level.objects) {
             if (!object.traits.has('decoration') && (object.width > this._dxy || object.height > this._dxy)) {
                 throw "Object too large for world square size.";
             }
             this.addObject(object);
+
+            if(!object.traits.has('camera_ignore') && !object.traits.has('decoration')){
+                minX = Math.min(minX, object.x);
+                minY = Math.min(minY, object.y);
+                maxX = Math.max(maxX, object.x + object.width);
+                maxY = Math.max(maxY, object.y + object.height);
+            }
         }
 
-        this._rendererNotify.applyZIndices();
+        this._levelBoundary = [minX, minY, maxX, maxY];
+        this._rendererProxy.applyZIndices();
+
+        this._engine.getCamera().setBoundary(this.getLevelBoundary());
+        this._engine.forceFocusOnHero();
     }
 
     loadSprite(object) {
-        this._rendererNotify.loadSprite(object);
+        this._rendererProxy.loadSprite(object);
+    }
+
+    updateSprite(object) {
+        this._rendererProxy.updateSprite(object);
     }
 
     addObject(object) {
@@ -69,14 +103,14 @@ class World {
         square.add(object);
 
         if (object.traits.has('displayable')) {
-            this._rendererNotify.addObject(object);
+            this._rendererProxy.addObject(object);
         }
     }
 
     deleteObject(object) {
         object.container.delete(object);
         if (object.traits.has('displayable')) {
-            this._rendererNotify.deleteObject(object);
+            this._rendererProxy.deleteObject(object);
         }
     }
 
@@ -91,7 +125,7 @@ class World {
         }
 
         if (object.traits.has('displayable')) {
-            this._rendererNotify.notifyObjectMoved(object);
+            this._rendererProxy.notifyObjectMoved(object);
         }
     }
 

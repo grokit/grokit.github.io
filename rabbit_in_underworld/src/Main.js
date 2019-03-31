@@ -5,29 +5,49 @@ if (!PIXI.utils.isWebGLSupported()) {
 }
 
 let zoomLevel = 1;
-//var autoScreenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
-//let screenWidth = autoScreenWidth;
-//let screenWidth = 1200 / zoomLevel;
-//let screenHeight = 800 / zoomLevel;
-let screenWidth = 800 / zoomLevel;
-let screenHeight = 600 / zoomLevel;
-//let screenWidth = 640 / zoomLevel;
-//let screenHeight = 480 / zoomLevel;
+let screenFit = 0.80;
+//let autoScreenWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+//let screenWidth = screenFit * screen.width / zoomLevel;
+//let screenHeight = screenFit * screen.height / zoomLevel;
 
-var app = new PIXI.Application(screenWidth, screenHeight, {
-    antialias: true,
-    autoStart: false,
-    resolution: zoomLevel,
-    //backgroundColor: 0x66c2ff,
-    backgroundColor: 0x0,
-});
+let screenWidth  = 640;
+let screenHeight = 480;
+while(screenWidth*(zoomLevel)< screen.width && screenHeight*(zoomLevel)< screen.height){
+    zoomLevel += 0.1;
+}
+zoomLevel -= 0.1;
 
-var canvas = document.getElementById('gamespace');
+screenWidth *= screenFit;
+screenHeight *= screenFit;
+Console.debug('Zoom level: ' + zoomLevel);
+Console.debug('Native screen width: ' + screen.width);
+Console.debug('Native screen height: ' + screen.height);
+Console.debug('Screen width: ' + screenWidth);
+Console.debug('Screen height: ' + screenHeight);
+
+// Debug with console at bottom.
+if(Constants.isDebug()){
+    screenHeight = screenHeight * 0.8;
+}
+
+function genApp(){
+    let app = new PIXI.Application(screenWidth, screenHeight, {
+        antialias: true,
+        autoStart: false,
+        resolution: zoomLevel,
+        //backgroundColor: 0x66c2ff,
+        backgroundColor: 0x0,
+    });
+    return app;
+}
+
+let canvas = document.getElementById('gamespace');
+let app = genApp();
 canvas.appendChild(app.view);
 
 // Pre-load all gfx.
 PIXI.loader
-    .add(AssetsList.list())
+    .add(AssetsList.listGfx())
     .on("progress", onGfxLoadProgress)
     .load(onGfxLoaded);
 
@@ -47,13 +67,11 @@ class RendererProxy {
         this._app = app;
     }
 
+    updateSprite(object) {
+        object.sprite.texture = PIXI.Texture.fromImage(object.image);
+    }
+    
     loadSprite(object) {
-
-        if (false && object.image.search('cloud') != -1) {
-            console.log('loading cloud');
-            console.trace();
-        }
-
         object.sprite = new PIXI.Sprite(PIXI.loader.resources[object.image].texture);
         object.height = object.sprite.texture.height;
         object.width = object.sprite.texture.width;
@@ -113,30 +131,10 @@ function onGfxLoaded() {
     world.setObjectFactory(objectFactory);
 
     // Load level in engine.
-    let levels = new Array();
-
-    // Future: list from assets
-    if (false) {
-        levels.push(PIXI.loader.resources['levels/gorilla.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_03.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_01.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_02_vampire_weekend.json'].data);
-        /*
-        levels.push(PIXI.loader.resources['levels/l_exp.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_01.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_bug_stomp.json'].data);
-        */
-    } else {
-        levels.push(PIXI.loader.resources['levels/l_00_rabbit_in_house.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_01.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_02.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_02_vampire_weekend.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_03.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_04.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_05.json'].data);
-        levels.push(PIXI.loader.resources['levels/l_99_rabbit_in_safe_house.json'].data);
+    let levels = AssetsList.listLevels();
+    for(let i = 0; i < levels.length; ++i){
+        levels[i] = PIXI.loader.resources[levels[i]].data;
     }
-
     world.setLevels(levels);
 
     // Add link from world to rendered, such that in-engine
@@ -144,6 +142,7 @@ function onGfxLoaded() {
     world.setRendererNotify(new RendererProxy(app, stage));
 
     let engine = new Engine(world, screenWidth, screenHeight);
+    world.setEngine(engine);
 
     // Setup input (keyboard) to engine events.
     Input.wireEngine(engine);

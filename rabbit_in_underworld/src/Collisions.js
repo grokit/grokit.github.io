@@ -62,32 +62,49 @@ class Collisions {
         return vec;
     }
 
-    // This is written from the standpoint of the right object.
+    // This is written from the standpoint of the crr object.
+    // E.g.: crr is under cee.
     static collisionProp(crr, cee) {
+
+        let Xs = [crr.x, crr.x + crr.width, cee.x, cee.x +cee.width];
+        let Ys = [crr.y, crr.y + crr.height, cee.y, cee.y +cee.height];
+
+        // The default sort in JavaScript is lexicographical order of
+        // string conversion. Let's take a pause and ponder on how strange
+        // that is, then provide another sort function before we cry or
+        // laughs ourselves out of coding this game in JavaScript.
+        Xs.sort((a, b) => a - b);
+        Ys.sort((a, b) => a - b);
+
         let rv = {};
-        rv.oppositeForce = Collisions._fromCenter(cee, crr);
+        rv.overlapRatio = 
+            (Xs[2]-Xs[1])*(Ys[2]-Ys[1]) / 
+            Math.min(crr.width*crr.height, cee.width * cee.height);
 
-        // By removing last velocity, we know where the object was before
-        // it collided.
-        // Unfortunately, order matters here since more than one could be
-        // true at the same time.
-        if (crr.y - crr.vy >= cee.y + cee.height*0.9) {
-            rv.dir = 'over';
+        if(rv.overlapRatio < 0){
+            throw "Negative overlapRatio. Initial bug was due " +
+                  "to entertaining Javascript sort. Should never happen now.";
+        }
 
-            // Avoid cases where it could be top or {left, right}. Just wait for
-            // more displacement to rule-out. Don't put in the main if(...) clause
-            // because then it will transform over into {left | right}.
-            if(!(crr.x +crr.width > cee.x + 2 && crr.x < cee.x + cee.width -2)){
-                rv.dir = 'none';
-            }
-        } else if (crr.x - crr.vx + crr.width <= cee.x) {
-            rv.dir = 'left';
-        } else if (crr.x - crr.vx >= cee.x + cee.width) {
-            rv.dir = 'right';
-        } else if (crr.y - crr.vy + crr.height <= cee.y) {
-            rv.dir = 'under';
-        } else {
+        // If too ambiguous, wait another frame or two to resolve.
+        //if(rv.overlapRatio < 0.01){
+        if( (Xs[2]-Xs[1])*(Ys[2]-Ys[1]) < 1 ){
             rv.dir = 'none';
+            return rv;
+        }
+
+        if(Xs[2]-Xs[1] < Ys[2] - Ys[1]){
+            if(Xs[1] + (Xs[2]-Xs[1])/2 > crr.x + crr.width/2){
+                rv.dir = 'left';
+            }else{
+                rv.dir = 'right';
+            }
+        }else{
+            if(Ys[1] + (Ys[2]-Ys[1])/2 > crr.y + crr.height/2){
+                rv.dir = 'under';
+            }else{
+                rv.dir = 'over';
+            }
         }
 
         return rv;
@@ -118,11 +135,11 @@ class Collisions {
                 world.addObject(squished);
                 squished.traits.set('kill', 1000);
                 squished.traits.set('decoration');
-                Audio.play('sfx/object_generic_squished.ogg', 0.5, false);
+                Audio.play('sounds/sfx/object_generic_squished.ogg', 0.5, false);
             } else if (obj.traits.has('destroy_to_smoke')) {
                 Collisions.makeSmokeAt(obj, world, 10);
                 obj.traits.set('kill', 0);
-                Audio.play('sfx/object_generic_burnt.ogg', 0.5, false);
+                Audio.play('sounds/sfx/object_generic_burnt.ogg', 0.5, false);
             } else {
                 if (!obj.traits.has('velocity')) {
                     ObjectFactory._velocity(obj);
@@ -142,13 +159,13 @@ class Collisions {
                 ObjectFactory._gravityLow(obj);
                 if (isHero) {
                     obj.traits.add('hero');
-                    Audio.play('sfx/lost_life.ogg', 0.5, false);
+                    Audio.play('sounds/sfx/lost_life.ogg', 0.5, false);
                 } else {
-                    Audio.play('sfx/object_generic_burnt.ogg', 0.5, false);
+                    Audio.play('sounds/sfx/object_generic_burnt.ogg', 0.5, false);
                 }
 
                 obj.vx = -vx;
-                obj.vy = 10;
+                obj.vy = 3;
                 obj.traits.add('kill_through_offscreen');
             }
         }
@@ -177,10 +194,10 @@ class Collisions {
     // Direction of relationship: 
     //
     // - collider: crr, collidee: cee
-    // - crr collides on crr.
-    // - E.g. of spatial realations: cee is 'over' crr.
+    // - E.g. of spatial realations: cee is 'over' crr, cee is 'left' of crr.
     //
-    // Convention: only modify crr. When the relationship happens on the other side then...
+    // Convention: only modify crr or BOTH, but never cee only.
+    //             When the relationship happens on the other side then...
     //             .... OR should resolve both at once, always? (and it should not make a
     //             difference which one is first)?
     //
@@ -202,18 +219,11 @@ class Collisions {
 
             let collisionProp = Collisions.collisionProp(crr, cee);
 
-            // Subtle way in which ordering matters: if we invert crr, cee, then
-            // if the direction which removes from collision runs first, then this
-            // never happens.
-            if (crr.traits.has('velocity') && cee.traits.has('moving_platform')) {
-                crr.x += cee.vx;
-            }
-
             if (crr.traits.has('hero') && cee.traits.has('transform_to_gorilla')) {
 
                 crr.traits.remove('hero');
 
-                let nobj = world.getFactory().buildFromName("gfx/pants_gorilla.png");
+                let nobj = world.getFactory().buildFromName("gfx/pants_gorilla_r0.png");
                 nobj.x = crr.x;
                 nobj.y = crr.y;
                 world.addObject(nobj);
@@ -222,41 +232,70 @@ class Collisions {
                 cee.traits.set('kill', 0);
             }
 
-            if (crr.traits.has('bullet')) {
-                crr.onCollide(cee);
+            // Block that falls (immediately) when you touch it (and survive after touching the floor).
+            // ::B: -> if invert crr / cee, does not work. Investigate.
+            if (!crr.traits.has('decoration') && !cee.traits.has('velocity') && cee.traits.has('fall_on_touch')) {
+                cee.touched();
             }
 
-            if (!crr.traits.has('decoration') && (crr.traits.has('pushable') || !crr.traits.has('surface')) && cee.traits.has('button')) {
-                cee.press();
+            if (!cee.traits.has('decoration') && (cee.traits.has('pushable') || !cee.traits.has('surface')) && crr.traits.has('button')) {
+                crr.press();
             }
 
-            if (true && crr.traits.has('hero') && cee.traits.has('draggable')) {
-                cee.vx = crr.vx * 1.5;
-                cee.vy = crr.vy * 2;
-                if (crr.vy > cee.vx) {
-                    cee.vx *= 2;
+            if (crr.traits.has('push_hero') && cee.traits.has('hero')){
+                cee.vy += 6;
+                cee.vx += 7*crr.vx;
+            }
+
+            if (cee.traits.has('hero') && crr.traits.has('draggable')) {
+                crr.vx = cee.vx * 1.5;
+                crr.vy = cee.vy * 2;
+                if (cee.vy > crr.vx) {
+                    crr.vx *= 2;
                 }
             }
 
-            if (crr.traits.has('hero') && cee.traits.has('bomb')) {
-                cee.ignite();
+            if (cee.traits.has('hero') && crr.traits.has('bomb')) {
+                crr.ignite();
             }
 
-            if (crr.traits.has('explode_push') && cee.traits.has('velocity')) {
-                if (cee.traits.has('velocity')) {
-                    let vv = Collisions.norm(collisionProp.oppositeForce.x, collisionProp.oppositeForce.y);
-                    cee.vx += -vv.x * 25;
-                    cee.vy += -vv.y * 25;
-                }
+            if (cee.traits.has('explode_push') && crr.traits.has('velocity')) {
+                let oppositeForce = Collisions._fromCenter(crr, cee);
+                let vv = Collisions.norm(oppositeForce.x, oppositeForce.y);
+                crr.vx += -vv.x * 7;
+                crr.vy += -vv.y * 7;
             }
 
-            if (crr.traits.has('explode_push') && !cee.traits.has('decoration') && !cee.traits.has('hero') && !cee.traits.has('bomb')) {
+            if (crr.traits.has('explosion_applies_outward_force') && !cee.traits.has('decoration') && !cee.traits.has('bomb')) {
                 // not sure it's fun to not be able to walk through anymore
                 Collisions.genericKill(cee, world);
             }
 
-            if (crr.traits.has('explode_push') && cee.traits.has('bomb')) {
-                cee.ignite();
+            if (crr.traits.has('bomb') && cee.traits.has('explosion_applies_outward_force')) {
+                crr.ignite();
+            }
+
+            // Kill objects that have large overlap and solidity differential.
+            //
+            // Order issue again: since only one of the two objects have run collision detection,
+            // then it can be vMax into the other object after falling for a long time. 
+            if(
+                !cee.traits.has('kill_through_offscreen') && 
+                !cee.traits.has('decoration') && 
+                !crr.traits.has('decoration') && 
+                !crr.traits.has('no_overlap_kill') && 
+                collisionProp.overlapRatio > 0.65 && 
+                crr.getSolidity() < cee.getSolidity()){
+                if(false){
+                    // 0.45 might seem large number, but object's vy can be pretty high,
+                    // resulting in significant overlap for first collision.
+                    Console.debug('--');
+                    Console.debug(crr);
+                    Console.debug(cee);
+                    Console.debug(collisionProp.overlapRatio);
+                    Collisions.collisionProp(crr, cee);
+                }
+                Collisions.genericKill(crr, world);
             }
 
             // Collision with walls and floor.
@@ -265,18 +304,7 @@ class Collisions {
             if (crr.traits.has('stands_on_surface') && cee.traits.has('surface')) {
                 let collType = collisionProp.dir;
 
-                if ((cee.traits.has('surface_top_only') && collType != 'over')) {
-                    if ((collType == 'left' || collType == 'right') && cee.y >= crr.y + crr.height) {
-                        collType = 'over';
-                    } else {
-                        // Under.
-                        collType = 'skip';
-                    }
-                }
-
                 switch (collType) {
-                    case 'skip':
-                        break;
 
                     case 'left':
 
@@ -288,8 +316,10 @@ class Collisions {
                                 cee.vx = crr.vx;
                             }
                         } else {
-                            crr.x = cee.x - crr.width;
-                            crr.vx = 0;
+                            if(!cee.traits.has('surface_top_only')){
+                                crr.x = cee.x - crr.width;
+                                crr.vx = 0;
+                            }
                         }
 
                         if (crr.traits.has('walks')) {
@@ -307,8 +337,10 @@ class Collisions {
                                 cee.vx = crr.vx;
                             }
                         } else {
+                            if(!cee.traits.has('surface_top_only')){
                             crr.x = cee.x + cee.width;
                             crr.vx = 0;
+                            }
                         }
 
                         if (crr.traits.has('walks')) {
@@ -337,13 +369,16 @@ class Collisions {
 
                         if (!crr.traits.has('on_surface')) {
                             crr.traits.set('jumping', 0);
+                        }
+
+                        if(!cee.traits.has('surface_top_only')){
                             crr.vy = 0;
                             crr.y = cee.y - crr.height;
                         }
+
                         break;
 
                     case 'none':
-                        // :::
                         break;
 
                     default:
@@ -352,10 +387,28 @@ class Collisions {
                 }
             }
 
+            // After colliding (e.g. wall), bullet falls.
+            if(crr.traits.has('bullet') && !crr.traits.has('gravity') && !cee.traits.has('decoration')){
+                crr.traits.add('gravity');
+            }
+
+            // Subtle way in which ordering matters: if we invert crr, cee, then
+            // if the direction which removes from collision runs first, then this
+            // never happens.
+            if (crr.traits.has('velocity') && cee.traits.has('moving_platform')) {
+                crr.x += cee.vx;
+            }
+
             // If an enemy collides with enemy:
             // - Change direction if lateral.
             // - One dies if on top of each other.
-            if (crr.traits.has('walks') && cee.traits.has('walks') && crr.traits.has('self_collide_change_dir') && cee.traits.has('self_collide_change_dir') && !crr.traits.has('bullet')) {
+            if (
+                crr.traits.has('walks') && 
+                cee.traits.has('walks') && 
+                crr.traits.has('self_collide_change_dir') && 
+                cee.traits.has('self_collide_change_dir') && 
+                !crr.traits.has('bullet')) {
+
                 switch (collisionProp.dir) {
                     case 'right':
                         // Note: only right, onlt one of the two resolves
@@ -377,7 +430,11 @@ class Collisions {
             }
 
             // Lethal stuff kills crr on contact. :B:: reversed?
-            if (!crr.traits.has('immune_to_lethal') && !crr.traits.has('kill_through_offscreen') && !crr.traits.has('decoration') && !crr.traits.has('bomb') && cee.traits.has('lethal')) {
+            if (!crr.traits.has('immune_to_lethal') && 
+                !crr.traits.has('kill_through_offscreen') && 
+                !crr.traits.has('decoration') && 
+                !crr.traits.has('bomb') && 
+                cee.traits.has('lethal')) {
                 Collisions.genericKill(crr, world);
             }
 
@@ -405,18 +462,9 @@ class Collisions {
                 }
             }
 
-            // Block that falls (immediately) when you touch it (and survive after touching the floor).
-            if (!crr.traits.has('decoration') && !cee.traits.has('velocity') && cee.traits.has('fall_on_touch')) {
-                cee.touched();
-            }
-
-            if (cee.traits.has('sink_on_support')) {
-                cee.nSupport += 1;
-            }
-
             if ((crr.traits.has('hero') && cee.traits.has('to_next_level'))) {
                 engine.notifyNextLevel();
-
             }
+
         } // endof: collide function
 }

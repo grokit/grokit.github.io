@@ -8,7 +8,7 @@ Play [Rabbit in Underworld](https://grokit.github.io/rabbit_in_underworld). See 
 
 This is open-source, under **MIT license**, EXCEPT for:
 
-- Sound / music (rabbit_in_underworld/sounds/\*). This are not by me, therefore, their original license applies. Their license is contained in the node.md file in that directory.
+- Sound / music (rabbit_in_underworld/sounds/\*). Those are not by me, therefore, their original license applies. Their license is contained in the node.md file in that directory.
 
 ## License Details
 

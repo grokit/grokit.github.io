@@ -22,7 +22,7 @@ class ESGameController extends EngineStepBase {
     apply(obj) {
         if (obj.traits.has('TRPlayerDefeated')) {
             let age = obj.traits.get('TRPlayerDefeated').getAge();
-            if (age >= this._constants.transitionTimeMs() / 60 ) {
+            if (age >= this._constants.transitionTimeMs() / 60) {
                 let th = this;
                 this._endLoopActions.push(function() {
                     th._travelToRestartLevel();
@@ -71,17 +71,17 @@ class ESGameController extends EngineStepBase {
         }
 
         let levelFilename = this._locationsStack.pop();
-        if(levelFilename != 'reincarnation.json'){
+        if (levelFilename != 'reincarnation.json') {
             // Go to reincarnation, then come back to this level.
             this._locationsStack.push(levelFilename);
             this._locationsStack.push('reincarnation.json');
             this._permanentState.nLives -= 1;
-        }else{
+        } else {
             // We are currently in reincarnation.json, next go into
             // the level that was there before.
         }
 
-        if(this._permanentState.nLives < 0){
+        if (this._permanentState.nLives < 0) {
             this._locationsStack.push('game_over.json');
         }
 

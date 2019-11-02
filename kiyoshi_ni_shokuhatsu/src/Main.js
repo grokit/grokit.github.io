@@ -13,27 +13,21 @@ class Main {
                 window.setTimeout(callback, 1000 / 60);
             };
 
-        // Need to do first: creates all principal game components.
+        // Need to do first: creates principal game components.
         Factory.setupNormal();
 
-        // Load all assets.
+        // Load assets.
         await Factory.getAssetsList().loadAll();
 
         // Wire graphic engine.
         let canvas = document.getElementById('canvas_main');
-        let constants = Factory.getConstants();
-        canvas.width = constants.logicalScreenSize()[0] * constants.zoomLevel();
-        canvas.height = constants.logicalScreenSize()[1] * constants.zoomLevel();
-        Factory.getRenderer().setCanvas(canvas);
+        Factory.getRenderer().setAndInitializeCanvas(canvas);
 
         // Wire sound engine.
         let audio = document.createElement("audio");
         Factory.getGameAudio().setGameAudioDevice(audio);
 
-        // Object-as-message passing: tells game to do the same
-        // action as when a player defeated event happens to get
-        // the game started.
-        // ::: should we use a message bus instead?
+        // Message to start the game.
         let message = new OBMessage();
         message.traits.addTrait(new TRPlayerDefeated());
         message.traits.get('TRPlayerDefeated').setAge(1000);

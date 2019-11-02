@@ -9,7 +9,7 @@ class OBDisplayLivesAndTriggerNextLevel extends GameObjectBase {
     }
 
     tick() {
-        if(this._age == 0){
+        if (this._age == 0) {
             let message = new OBMessage();
             message.traits.addTrait(new TRPlayerDefeated());
             Factory.getWorld().addObject(message);

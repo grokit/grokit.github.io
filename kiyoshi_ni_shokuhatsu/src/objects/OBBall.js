@@ -7,10 +7,9 @@ class OBBall extends GameObjectBase {
         this.traits.addTraitGeneric('ball');
     }
 
-    tick() {
-    }
+    tick() {}
 
-    onCollide(){
+    onCollide() {
         let overlap = this._world.select(this.x, this.y, this.width, this.height);
         for (let obj of overlap) {
             if (obj.traits.has('surface')) {

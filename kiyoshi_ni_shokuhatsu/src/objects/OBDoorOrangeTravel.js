@@ -3,11 +3,9 @@ class OBDoorOrangeTravel extends GameObjectBase {
         super(x, y);
     }
 
-    tick() {
-    }
+    tick() {}
 
-    onCollide() {
-    }
+    onCollide() {}
 
     onKey(key) {
         if (key.action == 'up' && key.isDown) {

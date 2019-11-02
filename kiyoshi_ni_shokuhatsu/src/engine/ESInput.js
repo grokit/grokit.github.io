@@ -7,12 +7,10 @@ class ESInput extends EngineStepBase {
     }
 
     onBeginLoop() {
-        this._keys = this._input.getAndOnlyGetKeys();
+        this._keys = this._input.getKeysOncePerTick();
     }
 
     onEndLoop() {
-        // :::
-        //this._input.clearKeysUp();
     }
 
     apply(obj) {

@@ -69,8 +69,8 @@ class Engine {
         // Processing objects in the same order through 
         // stable-sort also diminishes non-reproducible effects.
         allObjects.sort(function(a, b) {
-            if (a.zIndex==null) throw new Error("Object missing zIndex.");
-            if (b.zIndex==null) throw new Error("Object missing zIndex.");
+            if (a.zIndex == null) throw new Error("Object missing zIndex.");
+            if (b.zIndex == null) throw new Error("Object missing zIndex.");
             let az = a.zIndex + 1 / (a.id + 2);
             let bz = b.zIndex + 1 / (b.id + 2);
             return az - bz;

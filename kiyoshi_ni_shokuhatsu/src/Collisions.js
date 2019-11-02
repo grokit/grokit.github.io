@@ -128,8 +128,8 @@ class Collisions {
 
             case 'left':
                 objL.x = objR.x - objL.width;
-                if(objL.vx>0){
-                objL.vx = 0;
+                if (objL.vx > 0) {
+                    objL.vx = 0;
                 }
                 // :::BB REMOVE
                 objL._dir *= -1;
@@ -137,8 +137,8 @@ class Collisions {
 
             case 'right':
                 objL.x = objR.x + objR.width;
-                if(objL.vx <0){
-                objL.vx = 0;
+                if (objL.vx < 0) {
+                    objL.vx = 0;
                 }
                 // :::BB REMOVE
                 objL._dir *= -1;

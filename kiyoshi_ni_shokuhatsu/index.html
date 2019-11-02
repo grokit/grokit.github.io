@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <title>The Game of OOOOOOOooOOOoOoOOO</title>
   <style>
+     a {
+           color: hotpink;
+     }
     body {
         background-color: #000000;
         color: white;
@@ -12,7 +15,20 @@
 	canvas {
 	  image-rendering: optimizeSpeed;             
 	  image-rendering: pixelated;                 
+        padding: 0;
+        margin: auto;
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
 	}
+
+    #container_main {
+          text-align: center;
+                border: 3px solid gray;
+    }
 
   </style>
 </head>
@@ -84,12 +100,17 @@ window.onload = function () {
 }
 </script>
 <body>
-<div align="center" border="2">
-<canvas id="canvas_main" style="border: 1px solid black;"></canvas>
+
+
+<canvas id="canvas_main" style="border: 1px solid black;">
+</canvas>
+
+<div id="container_main" border="2">
 <p>
-Click in the center, then use the arrow keys or wasd.
+wasd + space to control, f for fullscreen. <a href="https://github.com/grokit/grokit.github.io/tree/master/kiyoshi_ni_shokuhatsu" target="_blank">source</a>, <a href="https://twitter.com/david_140orless" target="_blank">twitter / contact</a>
 </p>
 </div>
+
 </div> 
 </div>
 </body>

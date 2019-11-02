@@ -2,27 +2,65 @@
 class ObjectFactory {
     constructor() {
         let objs = [];
-// Reflect objects START.
-objs.push( function(){return new OBMessage();});
-objs.push( function(){return new OBLevelTransition();});
-objs.push( function(){return new OBSpikeCeiling();});
-objs.push( function(){return new OBDoorOrangeTravel();});
-objs.push( function(){return new OBCitizenGeneric();});
-objs.push( function(){return new OBDecoration();});
-objs.push( function(){return new OBSurface();});
-objs.push( function(){return new OBDisplayLivesAndTriggerNextLevel();});
-objs.push( function(){return new OBHero();});
-objs.push( function(){return new OBElevator();});
-objs.push( function(){return new OBFireball();});
-objs.push( function(){return new OBBlockFallIfAbove();});
-objs.push( function(){return new OBSpikeFloorRaising();});
-objs.push( function(){return new OBInvisibleMarker();});
-objs.push( function(){return new OBSpikeCeilingFalling();});
-objs.push( function(){return new OBBall();});
-objs.push( function(){return new OBBlockUpIfAbove();});
-objs.push( function(){return new OBFireSource();});
-objs.push( function(){return new OBText();});
-// Reflect objects END.
+        // Reflect objects START.
+        objs.push(function() {
+            return new OBMessage();
+        });
+        objs.push(function() {
+            return new OBLevelTransition();
+        });
+        objs.push(function() {
+            return new OBSpikeCeiling();
+        });
+        objs.push(function() {
+            return new OBDoorOrangeTravel();
+        });
+        objs.push(function() {
+            return new OBCitizenGeneric();
+        });
+        objs.push(function() {
+            return new OBDecoration();
+        });
+        objs.push(function() {
+            return new OBSurface();
+        });
+        objs.push(function() {
+            return new OBDisplayLivesAndTriggerNextLevel();
+        });
+        objs.push(function() {
+            return new OBHero();
+        });
+        objs.push(function() {
+            return new OBElevator();
+        });
+        objs.push(function() {
+            return new OBFireball();
+        });
+        objs.push(function() {
+            return new OBBlockFallIfAbove();
+        });
+        objs.push(function() {
+            return new OBSpikeFloorRaising();
+        });
+        objs.push(function() {
+            return new OBInvisibleMarker();
+        });
+        objs.push(function() {
+            return new OBSpikeCeilingFalling();
+        });
+        objs.push(function() {
+            return new OBBall();
+        });
+        objs.push(function() {
+            return new OBBlockUpIfAbove();
+        });
+        objs.push(function() {
+            return new OBFireSource();
+        });
+        objs.push(function() {
+            return new OBText();
+        });
+        // Reflect objects END.
         this._factories = new Map();
         for (let fn of objs) {
             // Don't create template objects yet since assets

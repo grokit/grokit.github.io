@@ -4,6 +4,5 @@ class TRSetBackgroundColor extends TraitBase {
         this.color = color;
     }
 
-    baseTick() {
-    }
+    baseTick() {}
 }

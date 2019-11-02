@@ -23,7 +23,7 @@ class Utils {
                 camera.notifyTrackedObject(obj, true);
             }
         }
-        if(!foundHero){
+        if (!foundHero) {
             let obj = new OBDecoration(0, 0);
             camera.notifyTrackedObject(obj, true);
         }

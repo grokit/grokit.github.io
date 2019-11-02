@@ -11,9 +11,7 @@ class OBCitizenGeneric extends GameObjectBase {
     }
 
     tick() {
-        if(this.traits.has('immobile')){
-        }
-        else{
+        if (this.traits.has('immobile')) {} else {
             if (Math.abs(this.vx) == 0) {
                 this.vx += this._dir;
                 if (this.vx > 0) {
@@ -32,7 +30,7 @@ class OBCitizenGeneric extends GameObjectBase {
     onCollide() {
         let overlap = this._world.select(this.x, this.y, this.width, this.height);
         for (let ob of overlap) {
-            if(ob.traits.has('lethal')){
+            if (ob.traits.has('lethal')) {
                 this.loadImage('OBCitizenGeneric_Dead.png');
                 this.vx = 0;
                 this.traits.addTraitGeneric('immobile');
@@ -44,7 +42,6 @@ class OBCitizenGeneric extends GameObjectBase {
         }
     }
 
-    onKill() {
-    }
+    onKill() {}
 
 }

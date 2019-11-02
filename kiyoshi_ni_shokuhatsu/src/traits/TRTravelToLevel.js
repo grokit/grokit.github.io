@@ -4,6 +4,5 @@ class TRTravelToLevel extends TraitBase {
         this.levelFilename = levelFilename;
     }
 
-    baseTick() {
-    }
+    baseTick() {}
 }

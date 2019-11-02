@@ -25,12 +25,12 @@ class OBHero extends GameObjectBase {
         }
     }
 
-    _doWipe(){
-                if (!this.traits.has('TRPlayerDefeated')) {
-                    this.traits.addTrait(new TRPlayerDefeated());
-                }
+    _doWipe() {
+        if (!this.traits.has('TRPlayerDefeated')) {
+            this.traits.addTrait(new TRPlayerDefeated());
+        }
 
-                this.loadImage("OBHero_Dead.png");
+        this.loadImage("OBHero_Dead.png");
     }
 
     onCollide() {
@@ -41,7 +41,7 @@ class OBHero extends GameObjectBase {
             }
             if (obj.traits.has('lethal_bottom')) {
                 let cprop = this._collisions.collisionProp(this, obj);
-                if(cprop.dir == 'under'){
+                if (cprop.dir == 'under') {
                     this._doWipe();
                 }
             }
@@ -56,7 +56,7 @@ class OBHero extends GameObjectBase {
         let sx = 0.14;
         let vxMax = 2;
 
-        if(!obj.traits.has('jumping') && obj.traits.has('ducking')){
+        if (!obj.traits.has('jumping') && obj.traits.has('ducking')) {
             sx = 0;
         }
 
@@ -78,26 +78,26 @@ class OBHero extends GameObjectBase {
             obj.flippedHorizontally = false;
         } else if (key.action == 'jump' && key.isDown) {
             if (obj.traits.has('on_surface') && !obj.traits.has('jumping')) {
-            if(this._keyJumpMem != key.serial){
-                this._keyJumpMem = key.serial;
-                // this._audio.play(':::BB');
-                //
-                obj.traits.remove('on_surface');
-                obj.traits.addTraitGeneric('jumping', -1);
-                let jmpStr = 3.5;
-                if (Math.abs(obj.vx) >= vxMax * 0.9) {
-                    jmpStr += 1.0;
-                }
-                if(obj.traits.has('ducking')){
-                    jmpStr += 2.5;
-                    if(obj.flippedHorizontally){
-                        obj.vx = -10;
-                    }else{
-                        obj.vx = 10;
+                if (this._keyJumpMem != key.serial) {
+                    this._keyJumpMem = key.serial;
+                    // this._audio.play(':::BB');
+                    //
+                    obj.traits.remove('on_surface');
+                    obj.traits.addTraitGeneric('jumping', -1);
+                    let jmpStr = 3.5;
+                    if (Math.abs(obj.vx) >= vxMax * 0.9) {
+                        jmpStr += 1.0;
                     }
+                    if (obj.traits.has('ducking')) {
+                        jmpStr += 2.5;
+                        if (obj.flippedHorizontally) {
+                            obj.vx = -10;
+                        } else {
+                            obj.vx = 10;
+                        }
+                    }
+                    obj.vy += jmpStr;
                 }
-                obj.vy += jmpStr;
-            }
             }
         } else if (key.action == 'down' && key.isDown) {
             obj.traits.addTraitGeneric('ducking');

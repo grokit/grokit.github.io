@@ -5,7 +5,10 @@ class CanvasRenderer {
         this._backgroundColor = '#000000'
     }
 
-    setCanvas(canvas) {
+    setAndInitializeCanvas(canvas) {
+        canvas.width = this._constants.logicalScreenSize()[0] * this._constants.zoomLevel();
+        canvas.height = this._constants.logicalScreenSize()[1] * this._constants.zoomLevel();
+
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
 
@@ -19,6 +22,25 @@ class CanvasRenderer {
 
         this.screenHeight = this.canvas.height;
         this.screenWidth = this.canvas.width;
+
+        let fullscreen = function(){
+        if (canvas.webkitRequestFullScreen) {
+            canvas.webkitRequestFullScreen();
+        } else {
+            canvas.mozRequestFullScreen();
+        }
+        }
+
+        // Fullscreen can only be triggered by user action.
+        canvas.addEventListener("click", fullscreen);
+
+        // 'f' = fullscreen.
+        let fullScreenIf = function(key){
+            if(key.key == 'f'){
+                fullscreen();
+            }
+        }
+        window.addEventListener("keydown", fullScreenIf);
     }
 
     // y+
@@ -43,7 +65,7 @@ class CanvasRenderer {
     }
 
     draw(obj) {
-        if(obj.traits.has('TRSetBackgroundColor')){
+        if (obj.traits.has('TRSetBackgroundColor')) {
             this._backgroundColor = obj.traits.get('TRSetBackgroundColor').color;
         }
 

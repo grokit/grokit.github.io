@@ -19,7 +19,7 @@ class TRPlayerDefeated extends TraitBase {
         return this._age;
     }
 
-    setAge(age){
+    setAge(age) {
         this._age = age;
     }
 

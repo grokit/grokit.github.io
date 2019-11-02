@@ -2,13 +2,14 @@
 
 Javascript engine / games I'm writing for fun.
 
-Play [Rabbit in Underworld](https://grokit.github.io/rabbit_in_underworld). See [source code](https://github.com/grokit/grokit.github.io/tree/master/rabbit_in_underworld).
+- Play [Rabbit in Underworld](https://grokit.github.io/rabbit_in_underworld). See [source code](https://github.com/grokit/grokit.github.io/tree/master/rabbit_in_underworld).
+- Play [Kiyoshi ni Shokuhatsu](https://grokit.github.io/kiyoshi_ni_shokuhatsu). See [source code](https://github.com/grokit/grokit.github.io/tree/master/kiyoshi_ni_shokuhatsu).
 
 # License
 
 This is open-source, under **MIT license**, EXCEPT for:
 
-- Sound / music (rabbit_in_underworld/sounds/\*). Those are not by me, therefore, their original license applies. Their license is contained in the node.md file in that directory.
+- Sound / music. Those are not by me, therefore, their original license applies. Their license is contained in the node.md file in that directory.
 
 ## License Details
 

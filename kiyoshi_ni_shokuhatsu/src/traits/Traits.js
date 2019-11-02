@@ -29,6 +29,12 @@ class Traits {
     // Most traits are just a tag. In this case, just set
     // the base trait.
     addTraitGeneric(name, ttl = -1) {
+        // Another nice JavaScript oddity:
+        // https://stackoverflow.com/questions/203739/why-does-instanceof-return-false-for-some-literals
+        if (!(typeof name == "string")) {
+            throw "Wrong class type.";
+        }
+
         let trait = new TraitBase(ttl);
         // this._console.debug('Add ' + name + ' with ttl: ' + trait.ttl);
         this._t.set(name, trait);
@@ -37,7 +43,7 @@ class Traits {
     // To set more complex traits that might carry
     // custom function or behavior.
     addTrait(trait) {
-        if (!trait instanceof TraitBase) {
+        if (!(trait instanceof TraitBase)) {
             throw "Wrong class type.";
         }
 

@@ -11,11 +11,13 @@ class OBFireSource extends GameObjectBase {
 
     tick() {
 
-        if (this._x % 5 == 0 && this._angle % 180 < 90) {
+        if (this._x % 10 == 0 && (this._angle <= 90 || (this._angle >= 180 && this._angle <= 270))) {
             let peek = new OBFireball();
 
             for (let i of[1, -1]) {
                 let fire = new OBFireball(this.x + this.width / 2 - peek.width / 2, this.y + this.height / 2 - peek.height / 2);
+
+                fire.zIndex = this.zIndex + 5;
 
                 let speed = 0.6;
                 let angle = 90 + this._angle * i;
@@ -28,7 +30,7 @@ class OBFireSource extends GameObjectBase {
             }
         }
 
-        this._angle += 1.6;
+        this._angle += 0.7;
         this._angle = this._angle % 360;
         this._x += 1;
     }

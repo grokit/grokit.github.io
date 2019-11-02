@@ -1,5 +1,9 @@
 class EngineStepBase {
 
+    constructor(){
+        this._constants = Factory.getConstants();
+    }
+
     name() {
         return this.constructor.name;
     }

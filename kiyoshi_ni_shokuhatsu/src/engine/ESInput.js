@@ -10,15 +10,14 @@ class ESInput extends EngineStepBase {
         this._keys = this._input.getAndOnlyGetKeys();
     }
 
-    onEndLoop() {}
+    onEndLoop() {
+        // :::
+        //this._input.clearKeysUp();
+    }
 
     apply(obj) {
-        if (obj.traits.has('controllable')) {
-            let control = obj.traits.get('controllable');
-            for (let key of this._keys) {
-                this._console.trace('onKey ' + key.action + ' on object ' + obj.id + ' of type ' + obj.constructor.name);
-                control.onKey(key, obj);
-            }
+        for (let key of this._keys) {
+            obj.baseOnKey(key);
         }
     }
 }

@@ -1,7 +1,7 @@
 class OBSpikeFloorRaising extends GameObjectBase {
     constructor(x, y) {
         super(x, y);
-        this.zIndex = 10;
+        this.zIndex = 20;
         this._anchorY = -1;
 
         this._phase = 0;

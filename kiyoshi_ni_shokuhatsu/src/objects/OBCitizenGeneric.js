@@ -11,37 +11,40 @@ class OBCitizenGeneric extends GameObjectBase {
     }
 
     tick() {
-        if (Math.abs(this.vx) == 0) {
-            this.vx += this._dir;
-            if (this.vx > 0) {
-                this.flippedHorizontally = false;
-            } else {
-                this.flippedHorizontally = true;
-            }
+        if(this.traits.has('immobile')){
+        }
+        else{
+            if (Math.abs(this.vx) == 0) {
+                this.vx += this._dir;
+                if (this.vx > 0) {
+                    this.flippedHorizontally = false;
+                } else {
+                    this.flippedHorizontally = true;
+                }
 
-            if (Math.floor(Math.random() * 101) < 20) {
-                this.vy += 1 + Math.random() * 3;
+                if (Math.floor(Math.random() * 101) < 20) {
+                    this.vy += 1 + Math.random() * 3;
+                }
             }
         }
+    }
 
+    onCollide() {
         let overlap = this._world.select(this.x, this.y, this.width, this.height);
         for (let ob of overlap) {
-            if (ob.traits.has('lethal')) {
-                this.traits.addTraitGeneric('kill', 0);
+            if(ob.traits.has('lethal')){
+                this.loadImage('OBCitizenGeneric_Dead.png');
+                this.vx = 0;
+                this.traits.addTraitGeneric('immobile');
+            }
+
+            if (ob.traits.has('surface')) {
+                this._collisions.applyLROUCollision(this, ob);
             }
         }
     }
 
     onKill() {
-        let deadAnim = new OBDecoration(this.x, this.y);
-        deadAnim.loadImage('OBCitizenGeneric_Dead.png');
-        deadAnim.zIndex = this.zIndex;
-        deadAnim.traits.remove('decoration');
-        deadAnim.traits.addTraitGeneric('gravity');
-        // ::: isn't this a good example of why make collisions in traits?
-        // --> it's pretty hard to say "behave like a normal object"?
-        deadAnim.traits.addTraitGeneric('stick_to_surface');
-        this._world.addObject(deadAnim);
     }
 
 }

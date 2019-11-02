@@ -1,3 +1,9 @@
+//
+// Containts the `world` objects of the game.
+//
+// Implements somewhat-efficient region-based 
+// selection and collisions.
+//
 class World {
     constructor() {
         // Factory classes
@@ -13,13 +19,25 @@ class World {
         // ... this basically restricts the size of the largest
         // collideable object that can be put in the game.
         this._dxy = this._constants.blockSize() * 2;
-
-        // (minX, minY, maxX, maxY) of non-decoration objects.
-        this._levelBoundary = [];
     }
 
-    clearAll() {
-        this._objects = new Map();
+    _findSquare(x, y) {
+        let squareX = Math.floor(x / this._dxy);
+        let squareY = Math.floor(y / this._dxy);
+        return [squareX, squareY]
+    }
+
+    _findOrCreateSquare(object) {
+        let [squareX, squareY] = this._findSquare(object.x, object.y);
+        if (!this._objects.has(squareX)) {
+            this._objects.set(squareX, new Map());
+        }
+
+        if (!this._objects.get(squareX).has(squareY)) {
+            this._objects.get(squareX).set(squareY, new Set());
+        }
+
+        return this._objects.get(squareX).get(squareY);
     }
 
     // ONLY use in tests -- this is O(n) lookup.
@@ -33,8 +51,12 @@ class World {
         return false;
     }
 
+    clearAll() {
+        this._objects = new Map();
+    }
+
     addObject(object) {
-        let square = this.findOrCreateSquare(object);
+        let square = this._findOrCreateSquare(object);
         object.container = square;
         square.add(object);
     }
@@ -43,45 +65,8 @@ class World {
         object.container.delete(object);
     }
 
-    findSquareXY(x, y) {
-        let squareX = Math.floor(x / this._dxy);
-        let squareY = Math.floor(y / this._dxy);
-        return [squareX, squareY]
-    }
-
-    findOrCreateSquare(object) {
-        let [squareX, squareY] = this.findSquareXY(object.x, object.y);
-        if (!this._objects.has(squareX)) {
-            this._objects.set(squareX, new Map());
-        }
-
-        if (!this._objects.get(squareX).has(squareY)) {
-            this._objects.get(squareX).set(squareY, new Set());
-        }
-
-        return this._objects.get(squareX).get(squareY);
-    }
-
-    getNearbyObjects(object) {
-        let objects = new Array();
-        let [squareX, squareY] = this.findSquareXY(object.x, object.y);
-        for (let i = squareX - 1; i <= squareX + 1; ++i) {
-            for (let j = squareY - 1; j <= squareY + 1; ++j) {
-                if (this._objects.has(i)) {
-                    if (this._objects.get(i).has(j)) {
-                        for (let object of this._objects.get(i).get(j)) {
-                            objects.push(object);
-                        }
-                    }
-                }
-            }
-        }
-
-        return objects;
-    }
-
     notifyObjectMoved(object) {
-        let square = this.findOrCreateSquare(object);
+        let square = this._findOrCreateSquare(object);
         if (square != object.container) {
             let oldContainer = object.container;
             object.container = square;
@@ -90,8 +75,14 @@ class World {
         }
     }
 
-    // Select all objects in square. 
-    select(x, y, dx, dy) {
+    collideWith(obj) {
+        return this.select(obj.x, obj.y, obj.width, obj.height, obj);
+    }
+
+    // Select all objects in rectangle region. 
+    //
+    // Remove `except` from list (usually caller object).
+    select(x, y, dx, dy, except = null) {
         if (dx < 0 || dy < 0) {
             throw "Do not use negative length.";
         }
@@ -102,10 +93,12 @@ class World {
         // Find all squares that can intersect with selection.
         for (let i = x - this._dxy; i <= x + dx + this._dxy; i += this._dxy) {
             for (let j = y - this._dxy; j <= y + dy + this._dxy; j += this._dxy) {
-                let [squareX, squareY] = this.findSquareXY(i, j);
+                let [squareX, squareY] = this._findSquare(i, j);
                 if (this._objects.has(squareX) && this._objects.get(squareX).has(squareY)) {
                     for (let object of this._objects.get(squareX).get(squareY)) {
-                        objects.push(object);
+                        if (object != except) {
+                            objects.push(object);
+                        }
 
                         if (dedup.has(object.id)) {
                             throw new Error("Should never get same object twice.");
@@ -134,6 +127,8 @@ class World {
 
     // SO: don't need to worry about adding / deleting during
     // iterations: https://stackoverflow.com/questions/35940216/es6-is-it-dangerous-to-delete-elements-from-set-map-during-set-map-iteration
+    // Update: seems like we cannot DELETE this._objects during an iteration
+    // without odd side-effects.
     objectsIterator() {
         return new IteratorNDimensions(this._objects[Symbol.iterator]());
     }

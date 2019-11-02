@@ -3,9 +3,14 @@
 //  - Tie-up objects without requiring long constructor chains.
 //  - Provide basic dependency injection.
 //
+// Downsides:
+//  - Have to consider order.
+//  - Limits those objects to only one, code more opaque.
+//
 class Factory {
     static setupNormal() {
         // Need to form a DAG. Consider order.
+        _instance.permanentState = new PermanentState();
         _instance.console = new Console();
         _instance.constants = new Constants();
         _instance.collisions = new Collisions();
@@ -18,17 +23,10 @@ class Factory {
         _instance.renderer = new CanvasRenderer();
         _instance.world = new World();
         _instance.engine = new Engine();
+    }
 
-        // Custom post-creation setup.
-        // doesn't work given that we reset the world...
-        // .... need to put in hud-like code.
-        if (false) {
-            let consoleText = new OBText(0, 0, 'Console init...');
-            consoleText.setColor('#055fad');
-            consoleText.setSize(5);
-            Factory.getWorld().addObject(consoleText);
-            Factory.getConsole().linkToObject(consoleText);
-        }
+    static getPermanentState() {
+        return _instance.permanentState;
     }
 
     static getCamera() {

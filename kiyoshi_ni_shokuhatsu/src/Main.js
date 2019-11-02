@@ -30,6 +30,15 @@ class Main {
         let audio = document.createElement("audio");
         Factory.getGameAudio().setGameAudioDevice(audio);
 
+        // Object-as-message passing: tells game to do the same
+        // action as when a player defeated event happens to get
+        // the game started.
+        // ::: should we use a message bus instead?
+        let message = new OBMessage();
+        message.traits.addTrait(new TRPlayerDefeated());
+        message.traits.get('TRPlayerDefeated').setAge(1000);
+        Factory.getWorld().addObject(message);
+
         // Main game loop.
         let engine = Factory.getEngine();
         let loop = function() {

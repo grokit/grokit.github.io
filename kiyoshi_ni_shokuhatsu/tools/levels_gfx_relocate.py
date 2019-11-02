@@ -21,17 +21,21 @@ if __name__ == '__main__':
     for im in getImages():
         imMap[os.path.split(im)[1]] = im
 
-    out = []
-    pattern = '"image":"(.*?)"'
-    for line in open('levels/earthquake_building.json').readlines(): 
-        m = re.search(pattern, line)
-        if m is not None:
-            found = m.group(1)
-            found = os.path.split(found)[1]
-            line = '"image": ".%s",\n' % imMap[found]
-        out.append(line)
+    folder = './levels'
+    files = os.listdir(folder)
+    for ff in files:
+        out = []
+        pattern = '"image":"(.*?)"'
+        ff = os.path.join(folder, ff)
+        for line in open(ff).readlines(): 
+            m = re.search(pattern, line)
+            if m is not None:
+                found = m.group(1)
+                found = os.path.split(found)[1]
+                line = '"image": ".%s",\n' % imMap[found]
+            out.append(line)
 
-    open('levels/earthquake_building.json', 'w').write("".join(out))
+        open(ff, 'w').write("".join(out))
 
 
 

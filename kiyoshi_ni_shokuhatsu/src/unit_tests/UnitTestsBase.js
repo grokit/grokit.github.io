@@ -6,10 +6,11 @@
 class UnitTestsBase {
     constructor() {
         this._isDone = false;
+        this._constants = Factory.getConstants();
         this._console = Factory.getConsole();
         this._world = Factory.getWorld();
         this._engine = Factory.getEngine();
-        this._constants = Factory.getConstants();
+        this._camera = Factory.getCamera();
     }
 
     name() {
@@ -30,9 +31,6 @@ class UnitTestsBase {
         throw new Error("Must be overridden.");
     }
 
-    // After this amount of time, if test is not successful
-    // it's considered stuck.
-    // ::->: put in test base?
     getMaxTimeLength() {
         return 60 * 60;
     }
@@ -45,16 +43,6 @@ class UnitTestsBase {
     }
 
     onBeginLoop() {}
-
-    baseTick() {
-
-        this.tick();
-    }
-
-    tick() {
-        throw new Error("Must be overridden.");
-    }
-
 
     baseOnEndLoop() {
         this.onEndLoop();

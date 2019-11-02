@@ -4,7 +4,7 @@ class UTObjTTLExpireGetsRemoved extends UnitTestsBase {
     }
 
     setup() {
-        this._fireball = new OBFireball(400, 400);
+        this._fireball = new OBFireball(100, 100);
 
         // This is what we are testing.
         this._fireball.traits.addTraitGeneric('kill', 20);
@@ -16,9 +16,8 @@ class UTObjTTLExpireGetsRemoved extends UnitTestsBase {
         this._world.addObject(new OBText(this.name(), 200, 200));
     }
 
-    tick() {
+    onBeginLoop() {
         let engineTime = this._engine.getTime();
-        // ::: make time more precise
         if (engineTime < 15) {
             if (!this._world.TEST_ONLY_isInWorld(this._fireball)) {
                 throw new Error("Expect fire in world.");

@@ -37,10 +37,6 @@ class ESUnitTestController extends EngineStepBase {
 
     apply(obj) {
         if (this._currentTest != null) {
-            this._currentTest.baseTick();
-        }
-
-        if (this._currentTest != null) {
             if (this._currentTest.isDone()) {
                 this._currentTest = null;
             }

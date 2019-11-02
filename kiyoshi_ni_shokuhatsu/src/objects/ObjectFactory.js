@@ -3,19 +3,25 @@ class ObjectFactory {
     constructor() {
         let objs = [];
 // Reflect objects START.
-objs.push( function(){return new OBSpikeCeilingFalling();});
-objs.push( function(){return new OBSpikeFloorRaising();});
-objs.push( function(){return new OBHero();});
-objs.push( function(){return new OBText();});
-objs.push( function(){return new OBFireball();});
+objs.push( function(){return new OBMessage();});
+objs.push( function(){return new OBLevelTransition();});
+objs.push( function(){return new OBSpikeCeiling();});
+objs.push( function(){return new OBDoorOrangeTravel();});
 objs.push( function(){return new OBCitizenGeneric();});
-objs.push( function(){return new OBFireSource();});
 objs.push( function(){return new OBDecoration();});
 objs.push( function(){return new OBSurface();});
+objs.push( function(){return new OBDisplayLivesAndTriggerNextLevel();});
+objs.push( function(){return new OBHero();});
 objs.push( function(){return new OBElevator();});
-objs.push( function(){return new OBSpikeCeiling();});
-objs.push( function(){return new OBBall();});
+objs.push( function(){return new OBFireball();});
+objs.push( function(){return new OBBlockFallIfAbove();});
+objs.push( function(){return new OBSpikeFloorRaising();});
 objs.push( function(){return new OBInvisibleMarker();});
+objs.push( function(){return new OBSpikeCeilingFalling();});
+objs.push( function(){return new OBBall();});
+objs.push( function(){return new OBBlockUpIfAbove();});
+objs.push( function(){return new OBFireSource();});
+objs.push( function(){return new OBText();});
 // Reflect objects END.
         this._factories = new Map();
         for (let fn of objs) {
@@ -45,15 +51,22 @@ objs.push( function(){return new OBInvisibleMarker();});
             }
         }
 
+        let out = null;
         if (foundObj != null) {
             foundObj.loadImage(filename);
-            return foundObj;
+            out = foundObj;
+        } else {
+            // Default object if we cannot find match.
+            out = new OBDecoration();
+            out.loadImage(filename);
         }
 
-        // Default object if we cannot find match.
-        let obj = new OBDecoration();
-        obj.loadImage(filename);
-        return obj;
+        // Quality control
+        if (out.zIndex < 0 || out.zIndex > 99) {
+            throw new Error("Invalid zIndex: " + out.zIndex + " for: " + out.name());
+        }
+
+        return out;
     }
 
     // Creates an object from the raw filename. Example block.png.
@@ -62,6 +75,7 @@ objs.push( function(){return new OBInvisibleMarker();});
     buildFromName(name, layerId = 10, customProps = null) {
         let obj = this._map(name);
         obj.z = layerId;
+        obj.customProps = customProps;
         return obj;
     }
 }

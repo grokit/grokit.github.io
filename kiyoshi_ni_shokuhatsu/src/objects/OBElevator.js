@@ -3,7 +3,7 @@ class OBElevator extends GameObjectBase {
         super(x, y);
         // Generic traits are named on the spot when they are added.
         this._audio = Factory.getGameAudio();
-        this.vy = -5;
+        this.vy = -3;
         this._world = Factory.getWorld();
         this._time = 0;
 
@@ -14,14 +14,6 @@ class OBElevator extends GameObjectBase {
     }
 
     tick() {
-        let overlap = this._world.select(this.x, this.y, this.width, this.height);
-        for (let ob of overlap) {
-            if (ob.traits.has('invisible_marker')) {
-                this.vy = -this.vy;
-                break;
-            }
-        }
-
         let update = false;
         if (this._time % 10 == 0) {
             this._iImage = (this._iImage + 1) % this._images.length;
@@ -32,6 +24,17 @@ class OBElevator extends GameObjectBase {
         }
 
         this._time += 1;
+    }
+
+    onCollide() {
+        let overlap = this._world.select(this.x, this.y, this.width, this.height);
+        for (let ob of overlap) {
+            if (ob.traits.has('invisible_marker')) {
+                this.vy = -this.vy;
+                break;
+            }
+        }
+
     }
 
 }

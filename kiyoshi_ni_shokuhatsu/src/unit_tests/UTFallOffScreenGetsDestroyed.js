@@ -4,7 +4,8 @@ class UTFallOffScreenGetsDestroyed extends UnitTestsBase {
     }
 
     setup() {
-        this._hero = new OBHero(400, 275);
+        this._world.addObject(new OBSurface(100, 0));
+        this._hero = new OBHero(0, 100);
         this._world.addObject(this._hero);
     }
 
@@ -21,6 +22,4 @@ class UTFallOffScreenGetsDestroyed extends UnitTestsBase {
 
         // Let test time-out if hero never vanishes.
     }
-
-    tick() {}
 }

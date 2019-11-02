@@ -8,6 +8,7 @@ class ESMain extends EngineStepBase {
         super();
         this._world = Factory.getWorld();
         this._console = Factory.getConsole();
+        this._constants = Factory.getConstants();
     }
 
     apply(obj) {
@@ -35,13 +36,17 @@ class ESMain extends EngineStepBase {
 
         // Left-right friction.
         if (obj.traits.has('friction')) {
-            let friction = 0.1;
+            let friction = 0.07;
+
+            if (obj.traits.has('jumping')) {
+                friction *= 0.2;
+            }
 
             let pos = obj.vx >= 0;
             if (!pos) obj.vx = -obj.vx;
-            obj.vx = obj.vx - obj.vx * friction;
+            obj.vx = obj.vx - friction;
+            if (obj.vx < 0) obj.vx = 0;
             if (!pos) obj.vx = -obj.vx;
-
         }
 
         // Velocity
@@ -51,24 +56,6 @@ class ESMain extends EngineStepBase {
 
             if (Math.abs(obj.vx) < 0.001) obj.vx = 0;
             if (Math.abs(obj.vy) < 0.001) obj.vy = 0;
-        }
-
-        // Kill objects that fall-off stage.
-        if (obj.y <= -100) {
-            this._console.trace('Object falling off-stage: ' + obj.name());
-            obj.traits.addTraitGeneric('kill', 0);
-        }
-
-        // Remove objects out of kill.
-        if (obj.traits.has('kill')) {
-            let trait = obj.traits.get('kill');
-            if (trait.ttl == 0) {
-                this._console.trace('Object getting removed because `kill` trait out of TTL: ' + obj.name());
-                obj.onKillBase();
-                this._world.deleteObject(obj);
-            } else if (trait.kill < 0) {
-                throw new Error("Invalid ttl: " + trait.ttl);
-            }
         }
     }
 }

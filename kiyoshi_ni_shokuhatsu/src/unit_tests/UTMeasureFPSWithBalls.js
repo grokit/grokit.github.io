@@ -5,13 +5,12 @@ class UTMeasureFPSWithBalls extends UnitTestsBase {
 
     setup() {
         let levels = Factory.getLevels();
-        levels.loadLevelFromAssetName('ut_measure_fps_with_balls.json', this._world);
+        let level = levels.loadLevelFromAssetName('ut_measure_fps_with_balls.json');
+        Utils.setupLevelObjectInWorld(level, this._world, this._camera);
         this._beginTimesMs = Date.now();
     }
 
-    onBeginLoop() {}
-
-    tick() {
+    onBeginLoop() {
         let engineTime = this._engine.getTime();
         if (engineTime == 100) {
             let elapsedMs = Date.now() - this._beginTimesMs;

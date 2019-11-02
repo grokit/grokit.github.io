@@ -1,7 +1,14 @@
-class Key {}
+class Key {
+    constructor(){
+        // Since the key objects are re-used, consumer
+        // can use serial to distinguish different 
+        // presses.
+        this.serial = 0;
+    }
+}
 
 class Input {
-    // ::: support gamepad?: https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
+    // :::BB support gamepad?: https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
     // From: https://github.com/kittykatattack/learningPixi#introduction
     _createKey(keyCode, action) {
         var key = new Key();
@@ -52,6 +59,7 @@ class Input {
                 this._input.delete(k);
             }
         }
+        this._input.add(keyObj);
     }
 
     constructor() {
@@ -74,10 +82,12 @@ class Input {
         let th = this;
         for (let key of keys) {
             key.press = function() {
+                key.serial += 1;
                 th._onKeyPress(key);
             }
 
             key.release = function() {
+                key.serial += 1;
                 th._onKeyRelease(key);
             }
         }
@@ -90,5 +100,14 @@ class Input {
     // once a tick.
     getAndOnlyGetKeys() {
         return this._input;
+    }
+    
+    clearKeysUp() {
+        //this._input = new Set();
+        for (let k of this._input) {
+            if (k.isUp) {
+                this._input.delete(k);
+            }
+        }
     }
 }

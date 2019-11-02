@@ -99,7 +99,7 @@ class Collisions {
         return cen;
     }
 
-    _fromCenter(cee, crr) {
+    vectToCenter(cee, crr) {
         let centerCee = this._extractCenter(cee);
         let centerCrr = this._extractCenter(crr);
 
@@ -128,15 +128,19 @@ class Collisions {
 
             case 'left':
                 objL.x = objR.x - objL.width;
+                if(objL.vx>0){
                 objL.vx = 0;
-                // ::: REMOVE
+                }
+                // :::BB REMOVE
                 objL._dir *= -1;
                 break;
 
             case 'right':
                 objL.x = objR.x + objR.width;
+                if(objL.vx <0){
                 objL.vx = 0;
-                // ::: REMOVE
+                }
+                // :::BB REMOVE
                 objL._dir *= -1;
                 break;
 
@@ -160,71 +164,5 @@ class Collisions {
                 throw new Error("Not understanding collision type: " + collType);
                 break;
         }
-    }
-
-    // Collisions gotchas:
-    //
-    // - Order of collisions create lots of side-effects.
-    //    - obj1 and obj2 collide, resolving obj1 collision results in obj2 not detecting collision later in same loop.
-    //      - Sol: Could resolve collision in closure at the end of whole loop.
-    //
-    // - Multiple collisions at the same time is source of non-determinism 
-    //   if cannot handle them in a form of priority-order.
-    //      - Coll(obj1, obj2, obj3) -> resolving in closure might make this better.
-    //
-    // - Resolving a collision might put into collision, which will have 
-    //   to wait next loop to be resolved (unless make recursive, which 
-    //   could be a bottleneck). This can also lead to "harmonic-like" 
-    //   behavior: toggle between two collisions states in successive frames.
-    //
-    // - 3+ way collisions: is that even a good idea to try to code
-    //   this?
-    //
-    //????????????????????????????????????????????  
-    // Direction of relationship: 
-    //
-    // - collider: crr, collidee: cee
-    // - E.g. of spatial realations: cee is 'over' crr, cee is 'left' of crr.
-    //
-    // Convention: only modify crr or BOTH, but never cee only.
-    //             When the relationship happens on the other side then...
-    //             .... OR should resolve both at once, always? (and it should not make a
-    //             difference which one is first)?
-    //????????????????????????????????????????????  
-    // =========================================================================
-    //
-    // =========================================================================
-    // --> how to delegate that to smaller classes eventually?
-    //
-    // CONVENTION: --> ONLY every take action on objL.
-    //
-    onCollide(objL, objR) {
-        // ???? would it make sense to define collisions in a trait.
-        // Then trait can require other co-trait, and traits of other
-        // object.
-        // ????
-        // Collision with walls and floor.
-        //
-        // objL is <x> in relation to objR.
-        // E.g.: objL is 'over' objR.
-        if (objL.traits.has('stick_to_surface') && objR.traits.has('surface')) {
-            this.applyLROUCollision(objL, objR);
-        }
-
-        /*
-        if ((objL.traits.has('bouncy') && objR.traits.has('bouncy'))) {
-            let coll = this._fromCenter(objL, objR);
-            let speed = 2;
-            objL.vx -= speed * coll.x;
-            objL.vy -= speed * coll.y;
-        }
-
-        if ((objL.traits.has('bouncy') && objR.traits.has('hero'))) {
-            let coll = this._fromCenter(objL, objR);
-            let speed = 5;
-            objL.vx += speed * coll.x;
-            objL.vy += speed * coll.y;
-        }
-        */
     }
 }

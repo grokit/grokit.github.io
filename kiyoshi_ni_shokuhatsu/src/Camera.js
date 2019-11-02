@@ -17,7 +17,7 @@ class Camera {
         this._y = 0;
 
         // [minX, minY, maxX, maxY]
-        // :::: get from level.
+        // :::BB: get from level.
         this._levelBoundary = [0, 0, 10000, 10000];
 
         this._constants = Factory.getConstants();
@@ -98,7 +98,7 @@ class Camera {
 
         // Camera cannot look outside of world boundaries.
         // This avoids camera showing "before" or "after" end of level.
-        if (false) {
+        if (true) {
             this._x = Math.max(this._x, this._levelBoundary[0]);
             this._x = Math.min(this._x, this._levelBoundary[2] - this._screen[0]);
             this._y = Math.max(this._y, this._levelBoundary[1]);

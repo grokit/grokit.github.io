@@ -5,14 +5,15 @@ class Levels {
         this._objectFactory = Factory.getObjectFactory();
         this._assetsList = Factory.getAssetsList();
         this._console = Factory.getConsole();
+        this._constants = Factory.getConstants();
     }
 
-    loadLevelFromAssetName(name, world) {
+    loadLevelFromAssetName(name) {
+        this._filename = name;
+
         let tiledLevelJSON = JSON.parse(this._assetsList.get(name));
-        let level = this._loadLevel(tiledLevelJSON, world);
-        for (let obj of level.objects) {
-            world.addObject(obj);
-        }
+        let level = this._loadLevel(tiledLevelJSON);
+        return level;
     }
 
     /**
@@ -78,6 +79,7 @@ class Levels {
 
                         this._console.trace('adding ' + filename);
 
+                        ele.zIndex += 100 * layerId;
                         elems.add(ele);
                     }
                 }
@@ -98,10 +100,14 @@ class Levels {
                     ele.x = obj.x;
                     ele.y = height * tileHeight - obj.y;
 
+                    ele.x = ele.x - ele.x % tileWidth;
+                    ele.y = ele.y - ele.y % tileHeight;
+
                     if (ele.y < 0) {
                         throw "ele.y < 0";
                     }
 
+                    ele.zIndex += 100 * layerId;
                     elems.add(ele);
                 }
             }
@@ -112,16 +118,11 @@ class Levels {
         let level = new Level();
         level.objects = elems;
 
-        level.backgroundColor = 0x000000;
+        level.backgroundColor = "#000000";
 
         let v = tiledLevelJSON.backgroundcolor;
         if (v != null) {
-            let rgb =
-                parseInt('0x' + v.substring(1, 3)) * 256 * 256 +
-                parseInt('0x' + v.substring(3, 5)) * 256 +
-                parseInt('0x' + v.substring(5, 7));
-
-            level.backgroundColor = rgb;
+            level.backgroundColor = v;
         }
 
         return level;

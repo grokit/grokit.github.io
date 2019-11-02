@@ -3,7 +3,7 @@ class OBText extends GameObjectBase {
         super(x, y);
         this.text = text;
         this.traits.remove('moveable');
-        this.size = 10;
+        this.size = 4;
         this.color = "#ffffff";
     }
 

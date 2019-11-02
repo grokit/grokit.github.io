@@ -3,9 +3,15 @@ class OBFireball extends GameObjectBase {
         super(x, y);
         this.loadImage("OBFireball.png");
         this.traits.addTraitGeneric('lethal', -1);
-        this.zIndex = 95;
         this.traits.addTraitGeneric('stick_to_surface');
     }
 
-    tick() {}
+    tick() {
+        let overlap = this._world.select(this.x, this.y, this.width, this.height);
+        for (let ob of overlap) {
+            if (ob.traits.has('surface')) {
+                this._collisions.applyLROUCollision(this, ob);
+            }
+        }
+    }
 }

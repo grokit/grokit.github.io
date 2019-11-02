@@ -2,6 +2,7 @@ class CanvasRenderer {
     constructor() {
         this._constants = Factory.getConstants();
         this._camera = Factory.getCamera();
+        this._backgroundColor = '#000000'
     }
 
     setCanvas(canvas) {
@@ -35,11 +36,16 @@ class CanvasRenderer {
         return this.screenHeight - y - dy;
     }
 
-    clear() {
+    clear(backgroundColor) {
         this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+        this.ctx.fillStyle = this._backgroundColor;
+        this.ctx.fillRect(0, 0, this.screenWidth, this.screenHeight);
     }
 
     draw(obj) {
+        if(obj.traits.has('TRSetBackgroundColor')){
+            this._backgroundColor = obj.traits.get('TRSetBackgroundColor').color;
+        }
 
         let scale = this._constants.zoomLevel();
         if (obj.image) {
@@ -70,10 +76,15 @@ class CanvasRenderer {
 
         if (obj.text) {
             this.ctx.save();
+
+            this.ctx.translate(0, -this.screenHeight * (scale - 1.0))
+            this.ctx.scale(scale, scale)
+
             let size = obj.size * scale;
             this.ctx.font = `${size}px Arial`;
             this.ctx.fillStyle = obj.color;
             this.ctx.fillText(obj.text, this._tx(obj.x), this._ty(obj.y, obj.height));
+
             this.ctx.restore();
         }
     }

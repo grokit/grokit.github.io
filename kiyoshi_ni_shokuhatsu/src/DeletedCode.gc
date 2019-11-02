@@ -1,0 +1,11 @@
+
+        // Custom post-creation setup.
+        // doesn't work given that we reset the world...
+        // .... need to put in hud-like code.
+        if (false) {
+            let consoleText = new OBText(0, 0, 'Console init...');
+            consoleText.setColor('#055fad');
+            consoleText.setSize(5);
+            Factory.getWorld().addObject(consoleText);
+            Factory.getConsole().linkToObject(consoleText);
+        }

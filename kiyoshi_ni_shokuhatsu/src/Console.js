@@ -6,7 +6,7 @@ class Console {
 
         this._badLog = 0;
         this._lastCall = 0;
-        this._suppressAt = 1000;
+        this._suppressAt = 2000;
     }
 
     _tick() {
@@ -52,16 +52,20 @@ class Console {
         }
     }
 
-    info(s) {
+    debug(s) {
         if (this._level >= 4) {
+            this._out('[DEBU] ' + s);
+        }
+    }
+
+    info(s) {
+        if (this._level >= 3) {
             this._out('[INFO] ' + s);
         }
     }
 
-    debug(s) {
-        if (this._level >= 3) {
-            this._out('[DEBU] ' + s);
-        }
+    log(s) {
+        this.info(s);
     }
 
     warn(s) {

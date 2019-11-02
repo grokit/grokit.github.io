@@ -3,12 +3,12 @@ class TraitBase {
         this.ttl = ttl;
     }
 
-    baseTick() {
-        this.tick();
-    }
-
     name() {
         return this.constructor.name;
+    }
+
+    baseTick() {
+        this.tick();
     }
 
     // Only called in child.

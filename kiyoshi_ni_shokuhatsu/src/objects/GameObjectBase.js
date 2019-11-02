@@ -2,20 +2,19 @@ class GameObjectBase {
     constructor(x = 0, y = 0) {
         this.x = x;
         this.y = y;
-        // zIndex maps to layerId, 0 is the most background possible, "behind".
-        // Range of [0..100]
-        this.zIndex = 50;
+
         this.width = 0;
         this.height = 0;
+
+        // zIndex maps to layerId, 0 is the most background possible, "behind".
+        // Range of [0..99], then each layer in level adds 100.
+        this.zIndex = 50;
+
         this.flippedHorizontally = false;
         this.flippedVertically = false;
 
         this.vx = 0;
         this.vy = 0;
-
-        this.image = null;
-        this._lastImageLoaded = '';
-        this.text = null;
 
         // Files mapping to this object.
         // This is how we associate something.png to creating
@@ -31,6 +30,20 @@ class GameObjectBase {
         this._assetsList = Factory.getAssetsList();
         this._world = Factory.getWorld();
         this._collisions = Factory.getCollisions();
+
+        this.image = null;
+        this._lastImageLoaded = '';
+        let autoFile = this.name() + '.png'
+        if (this._assetsList.has(autoFile)) {
+            this.loadImage(autoFile);
+        }
+
+        this.text = null;
+
+        // This is set for Tiled object that fill the properties
+        // section. Use to be able to fully-specify the level from
+        // Tiled and not have to create special objects for each level.
+        this.customProps = null;
 
         this.id = _gameObjectBase_objId;
         _gameObjectBase_objId += 1;
@@ -62,19 +75,30 @@ class GameObjectBase {
         this.height = this.image.height;
     }
 
+    baseOnKey(key) {
+        this.onKey(key);
+    }
+
     onKey(key) {}
 
     baseTick() {
-        // Not need to *baseTick()* on traits since this
-        // is the collection object.
+        // This is a collection, not a base class.
+        // No need to call baseTick().
         this.traits.tick();
+
         this.tick();
     }
 
     tick() {
         throw new Error("Leave empty for child to overload.");
     }
+
+    baseOnCollide() {
+        this.onCollide();
+    }
+
+    onCollide() {}
 }
 
-// ::: move in Factory ... have some sort of object for this?
+// :::BB move in Factory ... have some sort of object for this?
 let _gameObjectBase_objId = 0;

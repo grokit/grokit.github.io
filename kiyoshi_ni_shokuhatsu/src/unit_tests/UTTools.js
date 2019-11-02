@@ -5,8 +5,8 @@ class UTTools extends UnitTestsBase {
 
     setup() {}
 
-    // ::: finish
-    tick() {
+    // :::BB finish
+    onBeginLoop() {
         let res = 0;
 
         this._ca = new CircularAverage(1000);

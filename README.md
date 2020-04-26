@@ -9,7 +9,7 @@ Javascript engine / games I'm writing for fun.
 
 This is open-source, under **MIT license**, EXCEPT for:
 
-- Sound / music. Those are not by me, therefore, their original license applies. Their license is contained in the node.md file in that directory.
+- Sound / music and _some_ graphics. Those are not all by me, therefore, their original license may apply. Their license should be contained in the node.md file in that directory.
 
 ## License Details
 
